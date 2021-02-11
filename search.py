@@ -4,6 +4,8 @@ import nltk
 import sys
 import getopt
 
+from inverted_index import InvertedIndex
+
 def usage():
     print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results")
 
@@ -20,42 +22,30 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     test
     """
 
-
-
-    # car AND cat
-    i = postings['car'].__iter()__
-    j = postings['cat'].__iter()__
-
-    a = i.__next()__
-    b = j.__next()__
-    if a == b:
-        # add a to search results
-    elif a < b:
-        a = i.__next__()
-    else:
-
-
-
-    index1 = 0
-    index2 = 0
-
-
-    for ...
-        if index1 % sqrt(len(postings['cat']))
-            index1 += ...
-
-        if index2 % sqrt(len(postings['car']))
-            index1 += ...
-
-        if a == b:
-        # add a to search results
-        elif a < b:
-            a = postings['cat'][index1]
-        else:
-
     print('running search on the queries...')
+
     # This is an empty method
     # Pls implement your code in below
+
+
+    ############################################
+    # Example code below to demonstrate how search.py may use InvertedIndex class to retrieve posting lists for term etc.....
+
+    inverted_index_class = InvertedIndex()
+
+    # Get the corresponding posting List for Term -> "brake"
+    query = "brake"
+    posting_list = inverted_index_class.GetPostingsForTerm(query)
+    for p in posting_list:
+        print(p, end = " ")
+    print("\n")
+
+    # Obtain the skip list for current postingList
+    skip_list = inverted_index_class.GetSkipPointers(posting_list)
+    for s in skip_list:
+        print(s, end = " ")
+
+    ############################################
 
 dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 

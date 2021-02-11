@@ -1,2 +1,5 @@
 data
+reuters
 .idea
+__pycache__
+venv
