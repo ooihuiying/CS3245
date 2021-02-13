@@ -134,14 +134,18 @@ class InvertedIndex:
         Returns:
             A list of posting list for given term
     """
-    def GetPostingsForTerm(self, term):
-        print("Loading Posting for term in memory...")
+    def GetPostingListForTerm(self, term):
+        print("Loading Posting List for term in memory...")
 
         offset = self.GetOffset(term)
+        if offset == -1:
+            # Term not found
+            return []
+
         line = self.ReadFromFile(self.out_postings, offset)
 
         # remove first item in the line which contains term value and last value \n
-        return line.split(" ")[1:][:-1]
+        return line.split(" ")[1:-1]
 
     """
         Method to get offset of the term in postings.txt
@@ -166,26 +170,30 @@ class InvertedIndex:
                 self.line_offset.append(offset)
                 offset += len(line) + 1 # 1 value is for accomodating \n
 
-        term_index = list(sorted(self.dictionary)).index(term)
-        return self.line_offset[term_index]
+        try:
+            term_index = list(sorted(self.dictionary)).index(term)
+            return self.line_offset[term_index]
+        except:
+            # Term not found
+            return -1;
 
     """
         Method to get a list of indexes that indicates the next index to jump to from current index 
         skip_pointer[i] = next index j we can jump to at index i
         If we cannot have skip pointer at i, then value will be i by default
         Params: 
-            posting_lists
+            posting_list
         Returns:
             skip_pointers_list 
     """
-    def GetSkipPointers(self, posting_lists):
+    def GetSkipPointers(self, posting_list):
         print("Constructing Skip Pointers...")
 
         skip_pointers = []
-        jump = ceil(sqrt(len(posting_lists)))
+        jump = ceil(sqrt(len(posting_list)))
 
-        for idx, posting in enumerate(posting_lists):
-            if idx % jump == 0 and (idx+jump) < len(posting_lists):
+        for idx, posting in enumerate(posting_list):
+            if idx % jump == 0 and (idx+jump) < len(posting_list):
                 skip_pointers.append(idx + jump)
             else:
                 skip_pointers.append(idx)
