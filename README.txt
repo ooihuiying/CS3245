@@ -11,7 +11,6 @@ Give an overview of your program, describe the important algorithms/steps
 in your program, and discuss your experiments in general.  A few paragraphs 
 are usually sufficient.
 
-
 == Files included with this submission ==
 
 List the files in your submission here and provide a short 1 line

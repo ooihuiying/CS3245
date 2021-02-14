@@ -8,6 +8,14 @@ from nltk.stem.porter import PorterStemmer
 
 from collections import defaultdict
 
+"""
+    index.py can use inverted_index.py to load data into postings.txt and dictionary.txt.
+    - self.postings and self.dictionary will have contents.
+    
+    search.py can use inverted_index.py to retrieve terms' posting lists, skip pointers.
+    - Loading dictionary from memory will be done at class constructor.
+    - Only self.dictionary will have contents. self.postings will be empty as we do not need to load everything from disk to mem. 
+"""
 class InvertedIndex:
 
     def __init__(self, in_dir = "", out_dict = "dictionary.txt", out_postings = "postings.txt"):
@@ -26,6 +34,7 @@ class InvertedIndex:
         # To be used for fulfilling search queries
         self.line_offset = []
 
+        # Load Dictionary Terms into memory when search.py initialises inverted_index
         if in_dir == "":
             self.LoadDictionaryFromMem()
 
@@ -36,7 +45,10 @@ class InvertedIndex:
     """
 
     """
-           Method to read the data file and fill up self.postings and self.dictionary
+           Method to read the data file and fill up self.postings and self.dictionary.
+           
+           Current implementation only removes punctuations, case folding and do word stemming.
+           It does not remove stop words.   
     """
     def ConstructIndex(self):
         print("Constructing Indexes...")
@@ -57,7 +69,8 @@ class InvertedIndex:
                         # Word Stemming & Case-Folding
                         term = stemmer.stem(w_token).lower()
 
-                        if len(term) == 0:
+                        # Remove numbers
+                        if w_token.isnumeric() or len(term) == 0:
                             continue
 
                         if term not in self.dictionary:
