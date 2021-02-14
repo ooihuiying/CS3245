@@ -23,8 +23,6 @@ def build_index(in_dir, out_dict, out_postings):
 
     inverted_index_class = InvertedIndex(in_dir, out_dict, out_postings)
     inverted_index_class.ConstructIndex()
-    inverted_index_class.SaveDictToMem()
-    inverted_index_class.SavePostingsToMem()
 
 
 
