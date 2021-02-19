@@ -1,35 +1,30 @@
 #!/usr/bin/python3
-import re
-import nltk
 import sys
 import getopt
+
+from inverted_index import InvertedIndex
+
 
 def usage():
     print("usage: " + sys.argv[0] + " -i directory-of-documents -d dictionary-file -p postings-file")
 
-def build_index(in_dir, out_dict, out_postings):
-    """
+
+"""
     build index from documents stored in the input directory,
     then output the dictionary file and postings file
-    """
-    print('indexing...')
+"""
 
-    """
-    indexing
-    skip pointers
-    """
+def build_index(in_dir, out_dict, out_postings):
 
-    # for each file in in_dir:
-    #     open file
-    #     tokenize contents
-    #     stemming
-    #     update posting in memory
-    #     update dictionary
-    # write postings and dictionary files
-
+    print('Indexing...')
 
     # This is an empty method
     # Pls implement your code in below
+
+    inverted_index_class = InvertedIndex(in_dir, out_dict, out_postings)
+    inverted_index_class.ConstructIndex()
+
+
 
 input_directory = output_file_dictionary = output_file_postings = None
 

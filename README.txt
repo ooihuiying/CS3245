@@ -17,6 +17,15 @@ List the files in your submission here and provide a short 1 line
 description of each file.  Make sure your submission's files are named
 and formatted correctly.
 
+
+(1) index.py: It takes in user's input and calls the appropriate functions in inverted_index.py to build index and save to memory
+(2) inverted_index.py: It is in charge of the main logic of constructing the dictionary and posting lists. It contains methods to retrieve the posting lists of a term and obtain skip list.
+(3) search.py:
+(4) results.md:
+
+
+
+
 == Statement of individual work ==
 
 Please put a "x" (without the double quotes) into the bracket of the appropriate statement.
