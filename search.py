@@ -35,7 +35,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
 
     # Get the corresponding posting List for Term -> "brake"
     query = "brake"
-    posting_list = inverted_index_class.GetPostingListForTerm(query)
+    size, posting_list = inverted_index_class.GetPostingListForTerm(query)
     for p in posting_list:
         print(p, end = " ")
     print("\n")

@@ -3,8 +3,6 @@ import shutil
 import string
 from queue_item import QueueItem
 from queue import PriorityQueue
-import pkg_resources
-# TODO: Explore limit memory. Currently block size are set by the number of lines processed.
 from math import sqrt
 from math import ceil
 from nltk.tokenize import word_tokenize
@@ -13,19 +11,21 @@ from nltk.stem.porter import PorterStemmer
 
 from collections import defaultdict
 
+# For this assignment, you can set an artificial threshold (e.g., after a certain number of pairs
+# have been processed) so that your system process those pairs as a block.
 
-"""
-    index.py can use inverted_index.py to load data into postings.txt and dictionary.txt.
-    - We will write out a subset of the posting list to block files under /block folder using SPIMI-Invert method.
-    - Once all those block files have been filled, we will then process all these block files together
-    - and append to posting.txt using the BISC k-way merge 
-    - self.postings and self.dictionary will have contents.
-    
-    search.py can use inverted_index.py to retrieve terms' posting lists, skip pointers.
-    - Loading dictionary from memory will be done at class constructor.
-    - Only self.dictionary will have contents. self.postings will be empty as we do not need to load everything from disk to mem. 
-"""
 class InvertedIndex:
+    """
+        index.py can use inverted_index.py to load data into postings.txt and dictionary.txt.
+        - We will write out a subset of the posting list to block files under /block folder using SPIMI-Invert method.
+        - Once all those block files have been filled, we will then process all these block files together
+        - and append to posting.txt using the BISC k-way merge
+        - self.postings and self.dictionary will have contents.
+
+        search.py can use inverted_index.py to retrieve terms' posting lists, skip pointers.
+        - Loading dictionary from memory will be done at class constructor.
+        - Only self.dictionary will have contents. self.postings will be empty as we do not need to load everything from disk to mem.
+    """
 
     BLOCK_SIZE_LIMIT = 100000
 
@@ -55,13 +55,13 @@ class InvertedIndex:
         ////////////////////////////////////////
     """
 
-    """
-           Method to read the data file and fill up self.postings and self.dictionary.
-           
-           Current implementation only removes punctuations, case folding and do word stemming.
-           It does not remove stop words.   
-    """
     def ConstructIndex(self):
+        """
+                   Method to read the data file and fill up self.postings and self.dictionary.
+
+                   Current implementation only removes punctuations, case folding and do word stemming.
+                   It does not remove stop words.
+        """
         print("Constructing Indexes...")
 
         stemmer = PorterStemmer()
@@ -104,19 +104,19 @@ class InvertedIndex:
 
                         # Write the previous items to new block
                         if curr_block_size == self.BLOCK_SIZE_LIMIT:
-                            block_index += 1
                             self.WriteBlockToDisk(block_index)
                             curr_block_size = 0
+                            block_index += 1
 
-
+        # Write last block
+        self.WriteBlockToDisk(block_index)
         self.MergeBlocks(block_index)
 
-
-    """
-               Method to create /blocks folder to keep all the intermediate block files
-               Method to remove all existing /block folders and posting.txt and dictionary.txt files   
-    """
     def ResetFiles(self):
+        """
+                   Method to create /blocks folder to keep all the intermediate block files
+                   Method to remove all existing /block folders and posting.txt and dictionary.txt files
+        """
 
         block_dir = "blocks"
         if os.path.exists(block_dir):
@@ -130,13 +130,13 @@ class InvertedIndex:
         if os.path.exists(self.out_dict):
             os.remove(self.out_dict)
 
-    """
-            Method to write the contents of posting lists (stored as self.postings in memory) to a new block file
-            SPIMI-Invert
-            Params:
-                - block_index: Gives us the file name
-    """
     def WriteBlockToDisk(self, block_index):
+        """
+                    Method to write the contents of posting lists (stored as self.postings in memory) to a new block file
+                    SPIMI-Invert
+                    Params:
+                        - block_index: Gives us the file name
+        """
         print("create new block ... " + str(block_index))
 
         result = ""
@@ -155,22 +155,23 @@ class InvertedIndex:
         self.postings = defaultdict(list)
         self.dictionary = set()
 
-    """
-            Method to read all the block files inside /Blocks and append them into Posting.txt
-            using BSBI Merging -> (total_num_blocks) K-Way Merge
-            Params:
-                - total_num_blocks: Total number of block files that we want to merge
-    """
+
     def MergeBlocks(self, total_num_blocks):
+        """
+                    Method to read all the block files inside /Blocks and append them into Posting.txt
+                    using BSBI Merging -> (total_num_blocks) K-Way Merge
+                    Params:
+                        - total_num_blocks: Total number of block files that we want to merge
+        """
         print("Merge all blocks ...")
 
         # blocks_offset[i] stores the offset value for reading from file of block i
-        blocks_offset = [0 for x in range(0, total_num_blocks+1)] # ignore value at index 0
+        blocks_offset = [0] * total_num_blocks
 
         q = PriorityQueue()
 
         # Add the first line of each block to priority queue
-        for block_num in range(1, total_num_blocks + 1):
+        for block_num in range(0, total_num_blocks):
             line = self.ReadFromFile("blocks/"+str(block_num), blocks_offset[block_num])
             blocks_offset[block_num] = blocks_offset[block_num] + len(line) + 1 # 1 for \n
             q.put(QueueItem(line, block_num))
@@ -188,8 +189,9 @@ class InvertedIndex:
             curr_block = curr_item.GetBlockNum()
 
             # Encountering new term -> need to append previous term and it's doc_ids to posting.txt
+            # TODO: Should not write out to memory each time we encounter a new term
             if curr_term != term_to_write and term_to_write != '':
-                content = term_to_write + " " + " ".join(doc_ids_to_write)
+                content = term_to_write + " " + str(len(doc_ids_to_write)) + " " + " ".join(doc_ids_to_write)
                 self.WriteToFile(self.out_postings, content + "\n", True)
                 self.WriteToFile(self.out_dict, term_to_write + "\n", True)
 
@@ -215,18 +217,18 @@ class InvertedIndex:
 
 
         # For the last term - posting lists
-        content = term_to_write + " " + " ".join(doc_ids_to_write)
+        content = term_to_write + " " + str(len(doc_ids_to_write)) + " " + " ".join(doc_ids_to_write)
         self.WriteToFile(self.out_postings, content + "\n", True)
         self.WriteToFile(self.out_dict, term_to_write + "\n", True)
 
 
-    """
-        Method to Write to out_file.
-        Params: 
-            out_file: file path
-            result: Text to store in out_file
-    """
     def WriteToFile(self, out_file, result, append = False):
+        """
+                Method to Write to out_file.
+                Params:
+                    out_file: file path
+                    result: Text to store in out_file
+        """
 
         if not append:
             fw = open(out_file, 'w+')
@@ -237,36 +239,38 @@ class InvertedIndex:
             fw.write(''.join(result))
 
 
-
-
     """
         ////////////////////////////////////////
         Methods for Search.py
         ////////////////////////////////////////
     """
 
-
-    """
-        Method to load the contents of dictionary.txt into self.dictionary set
-        
-        Called by constructor when search.py initialises inverted index class
-    """
     def LoadDictionaryFromMem(self):
+        """
+                Method to load the contents of dictionary.txt into self.dictionary set
+
+                Called by constructor when search.py initialises inverted index class
+        """
         if len(self.dictionary) != 0:
             return
+
+        unsorted_dict = set()
         for term in self.ReadFromFile(self.out_dict):
-            self.dictionary.add(term.rstrip('\n'))
+            unsorted_dict.add(term.rstrip('\n'))
 
-    """
-        Method to obtain the list of posting list for input term.
+        self.dictionary = sorted(unsorted_dict)
 
-        Params: 
-            term: term value
-    
-        Returns:
-            A list of posting list for given term
-    """
     def GetPostingListForTerm(self, term):
+        """
+                Method to obtain the list of posting list for input term.
+
+                Params:
+                    term: term value
+
+                Returns:
+                    A tuple containing the (len of posting list, the list of posting list for given term)
+        """
+
         print("Loading Posting List for term in memory...")
 
         offset = self.GetOffset(term)
@@ -275,25 +279,26 @@ class InvertedIndex:
             return []
 
         line = self.ReadFromFile(self.out_postings, offset)
+        split_line = line.split(" ")
 
-        # remove first item in the line which contains term value and last value \n
-        return line.split(" ")[1:-1]
+        # remove first 2 items in the line which contains term value & size
+        return split_line[1], split_line[2:]
 
-    """
-        Method to get offset of the term in postings.txt
-        
-        The terms in posting.txt and dictionary.txt have the same ordering.
-        term_index: We deduce the line number that the term appears in the postings.txt
-        from it's position in the sorted list of dictionary set.
-        line_offset[term_index] tells us the offset value of term
-        
-        Params: 
-            term: term value
-            result: Text to store in out_file
-        Returns:
-            offset value of term in postings.txt
-    """
     def GetOffset(self, term):
+        """
+                Method to get offset of the term in postings.txt
+
+                The terms in posting.txt and dictionary.txt have the same ordering.
+                term_index: We deduce the line number that the term appears in the postings.txt
+                from it's position in the sorted list of dictionary set.
+                line_offset[term_index] tells us the offset value of term
+
+                Params:
+                    term: term value
+                    result: Text to store in out_file
+                Returns:
+                    offset value of term in postings.txt
+        """
 
         # If self.line_offset has been constructed before, we skip this process
         if len(self.line_offset) == 0:
@@ -303,22 +308,22 @@ class InvertedIndex:
                 offset += len(line) + 1 # 1 value is for accomodating \n
 
         try:
-            term_index = list(sorted(self.dictionary)).index(term)
+            term_index = list(self.dictionary).index(term)
             return self.line_offset[term_index]
         except:
             # Term not found
             return -1;
 
-    """
-        Method to get a list of indexes that indicates the next index to jump to from current index 
-        skip_pointer[i] = next index j we can jump to at index i
-        If we cannot have skip pointer at i, then value will be i by default
-        Params: 
-            posting_list
-        Returns:
-            skip_pointers_list 
-    """
     def GetSkipPointers(self, posting_list):
+        """
+                Method to get a list of indexes that indicates the next index to jump to from current index
+                skip_pointer[i] = next index j we can jump to at index i
+                If we cannot have skip pointer at i, then value will be i by default
+                Params:
+                    posting_list
+                Returns:
+                    skip_pointers_list
+        """
         print("Constructing Skip Pointers...")
 
         skip_pointers = []
@@ -332,16 +337,16 @@ class InvertedIndex:
 
         return skip_pointers
 
-    """
-        Method to Read in the contents of in_file.
-        Params: 
-            in_file: file path 
-            offset: Optional offset to read from file
-            
-        Return: 
-            Returns either all the lines or a single line
-    """
     def ReadFromFile(self, in_file, offset = None):
+        """
+                Method to Read in the contents of in_file.
+                Params:
+                    in_file: file path
+                    offset: Optional offset to read from file
+
+                Return:
+                    Returns either all the lines or a single line
+        """
         f = open(in_file, 'r')
 
         if offset == None:
