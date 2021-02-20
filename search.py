@@ -36,9 +36,8 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     # Get the corresponding posting List for Term -> "brake"
     query = "brake"
     size, posting_list = inverted_index_class.GetPostingListForTerm(query)
-    for p in posting_list:
-        print(p, end = " ")
-    print("\n")
+    print(size)
+    print(posting_list)
 
     # Obtain the skip list for current postingList
     skip_list = inverted_index_class.GetSkipPointers(posting_list)
