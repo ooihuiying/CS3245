@@ -1,15 +1,16 @@
 class QueueItem:
     def __init__(self, line, block_num):
+        line = line.rstrip('\n').strip(' ')
         split_line = line.split(" ")
         self.term = split_line[0] # What is the term
-        self.line = line # What is to be stored in the final posting.txt file
+        self.posting_list = line.split(" ")[1:] # Remove first item
         self.block_num = block_num # Tell us what block file this item comes from
 
     def GetTerm(self):
         return self.term
 
-    def GetLine(self):
-        return self.line
+    def GetPostingList(self):
+        return self.posting_list
 
     def GetBlockNum(self):
         return int(self.block_num)
