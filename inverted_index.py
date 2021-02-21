@@ -41,10 +41,6 @@ class InvertedIndex:
         self.postings = defaultdict(list) # key: Term, Value: List of doc_id
         self.dictionary = set() # Terms
 
-        # line_offset list tells us the offset value for each line in the posting file
-        # To be used for fulfilling search queries
-        self.line_offset = []
-
         # Load Dictionary Terms into memory when search.py initialises inverted_index
         # self.dictionary_with_len set is a dictionary where the key is the term name
         # and the value is a tuple of (size of posting list, offset from top line of posting.txt)
@@ -354,7 +350,7 @@ class InvertedIndex:
                 Params:
                     in_file: file path
                     offset: Optional offset to read from file
-                    file_pointer: File Opener to in_file
+                    f: File Opener to in_file
                 Return:
                     Returns either all the lines or a single line
         """
