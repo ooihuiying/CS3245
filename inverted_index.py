@@ -11,20 +11,16 @@ from nltk.stem.porter import PorterStemmer
 
 from collections import defaultdict
 
-# For this assignment, you can set an artificial threshold (e.g., after a certain number of pairs
-# have been processed) so that your system process those pairs as a block.
-
 class InvertedIndex:
     """
         index.py can use inverted_index.py to load data into postings.txt and dictionary.txt.
         - We will write out a subset of the posting list to block files under /block folder using SPIMI-Invert method.
         - Once all those block files have been filled, we will then process all these block files together
         - and append to posting.txt using the BISC k-way merge
-        - self.postings and self.dictionary will have contents.
 
         search.py can use inverted_index.py to retrieve terms' posting lists, skip pointers.
         - Loading dictionary from memory will be done at class constructor.
-        - Only self.dictionary_with_len will have contents. self.postings will be empty as we do not need to load everything from disk to mem.
+        - Only self.dictionary will have contents.
     """
 
     MAX_LINES_TO_HOLD_IN_MEM = 100000
@@ -36,17 +32,12 @@ class InvertedIndex:
         self.out_dict = out_dict
         self.out_postings = out_postings
 
-        # Data Structures to be read for creating files
-        # To be used for creating indexes
-        self.postings = defaultdict(list) # key: Term, Value: List of doc_id
-        self.dictionary = set() # Terms
-
-        # Load Dictionary Terms into memory when search.py initialises inverted_index
-        # self.dictionary_with_len set is a dictionary where the key is the term name
+        # self.dictionary set is a dictionary where the key is the term name
         # and the value is a tuple of (size of posting list, offset from top line of posting.txt)
-        self.dictionary_with_len = {}
+        self.dictionary = {}
+        # Load Dictionary Terms into memory when search.py initialises inverted_index
         if in_dir == "":
-            self.LoadDictionaryWithLenFromMem()
+            self.LoadDictionaryFromMem()
 
     """
         ////////////////////////////////////////
@@ -67,7 +58,7 @@ class InvertedIndex:
         translator = str.maketrans('','', string.punctuation)
 
         block_index = 0
-        curr_lines_in_mem = 0
+        curr_lines_in_mem = 0 # Number of term-posting list pair
 
         self.ResetFiles()
 
@@ -75,6 +66,9 @@ class InvertedIndex:
         all_files = []
         for doc_id in os.listdir(self.in_dir):
             all_files.append(int(doc_id))
+
+        postings = defaultdict(list)  # key: Term, Value: List of doc_id
+        dictionary = set()  # Terms
 
         # Read in ascending order of their file names
         for doc_id in sorted(all_files):
@@ -94,22 +88,25 @@ class InvertedIndex:
                         if w_token.isnumeric() or len(term) == 0:
                             continue
 
-                        if term not in self.dictionary:
-                            self.dictionary.add(term)
-                        if str(doc_id) not in self.postings[term]:
-                            self.postings[term].append(str(doc_id))
+                        if term not in dictionary:
+                            dictionary.add(term)
+                            curr_lines_in_mem += 1
 
-                        curr_lines_in_mem += 1
+                        if str(doc_id) not in postings[term]:
+                            postings[term].append(str(doc_id))
 
                         # Write the previous items to new block
                         if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
-                            self.WriteBlockToDisk(block_index)
+                            self.WriteBlockToDisk(block_index, postings, dictionary)
+                            # Reset
                             curr_lines_in_mem = 0
+                            postings = defaultdict(list)
+                            dictionary = set()
                             block_index += 1
 
         # Write last block if exists
         if curr_lines_in_mem > 0:
-            self.WriteBlockToDisk(block_index)
+            self.WriteBlockToDisk(block_index, postings, dictionary)
             self.MergeBlocks(block_index + 1)
         else :
             self.MergeBlocks(block_index)
@@ -132,31 +129,29 @@ class InvertedIndex:
         if os.path.exists(self.out_dict):
             os.remove(self.out_dict)
 
-    def WriteBlockToDisk(self, block_index):
+    def WriteBlockToDisk(self, block_index, postings, dictionary):
         """
-                    Method to write the contents of posting lists (stored as self.postings in memory) to a new block file
+                    Method to write the contents of posting lists to a new block file
                     SPIMI-Invert
                     Params:
                         - block_index: Gives us the file name
+                        - postings: List of all the posting lists
+                        - dictionary: List of all the terms
         """
 
         print("Create new block ... " + str(block_index))
 
         result = ""
         # Sort Dictionary Terms. Line 11 of SPIMI - INVERT
-        for term in sorted(self.dictionary):
+        for term in sorted(dictionary):
             result += term + " "
             # No need to sort postings because they are already in sorted form when we processed
             # the docs in ascending order previously
-            for doc_id in self.postings[term]:
+            for doc_id in postings[term]:
                 result += doc_id + " "
             result += "\n"
 
         self.WriteToFile("blocks/"+str(block_index), result)
-
-        # Clear Postings and Dictionary from memory
-        self.postings = defaultdict(list)
-        self.dictionary = set()
 
 
     def MergeBlocks(self, total_num_blocks):
@@ -248,7 +243,6 @@ class InvertedIndex:
             q.put(QueueItem(line, curr_block))
 
 
-
         # Add last Term and its' posting lists to result
         if len(doc_ids_to_write) > 0:
             content = term_to_write + " " + " ".join(doc_ids_to_write) + "\n"
@@ -282,23 +276,20 @@ class InvertedIndex:
         ////////////////////////////////////////
     """
 
-    def LoadDictionaryWithLenFromMem(self):
+    def LoadDictionaryFromMem(self):
         """
-                Method to load the contents of dictionary.txt into self.dictionary_with_len set
+                Method to load the contents of dictionary.txt into self.dictionary set
                 Called by constructor when search.py initialises inverted index class
         """
-        if len(self.dictionary_with_len) != 0:
+        if len(self.dictionary) != 0:
             return
 
-        sorted_dict = {}
         for term in self.ReadFromFile(self.out_dict): # dictionary.txt is already sorted
             term = term.rstrip('\n').strip().split(" ")
             term_name = term[0]
             term_posting_len = term[1]
             offset = term[2]
-            sorted_dict[term_name] = (term_posting_len, offset)
-
-        self.dictionary_with_len = sorted_dict
+            self.dictionary[term_name] = (term_posting_len, offset)
 
     def GetPostingListForTerm(self, term):
         """
@@ -313,7 +304,7 @@ class InvertedIndex:
 
         print("Loading Posting List for term in memory...")
         try:
-            size_of_posting_list, offset = self.dictionary_with_len[term]
+            size_of_posting_list, offset = self.dictionary[term]
             line = self.ReadFromFile(self.out_postings, int(offset))
             split_line = line.rstrip('\n').split(" ")
             return size_of_posting_list, split_line[1:]  # remove first item in the line which contains term value

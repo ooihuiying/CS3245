@@ -34,7 +34,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     inverted_index_class = InvertedIndex()
 
     # Get the corresponding posting List for Term -> "brake"
-    query = "zzzz"
+    query = "brake"
     size, posting_list = inverted_index_class.GetPostingListForTerm(query)
     print(size)
     print(posting_list)
