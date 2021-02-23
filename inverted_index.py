@@ -88,9 +88,9 @@ class InvertedIndex:
                         if w_token.isnumeric() or len(term) == 0:
                             continue
 
+                        curr_lines_in_mem += 1
                         if term not in dictionary:
                             dictionary.add(term)
-                            curr_lines_in_mem += 1
 
                         if str(doc_id) not in postings[term]:
                             postings[term].append(str(doc_id))
@@ -147,8 +147,7 @@ class InvertedIndex:
             result += term + " "
             # No need to sort postings because they are already in sorted form when we processed
             # the docs in ascending order previously
-            for doc_id in postings[term]:
-                result += doc_id + " "
+            result += " ".join(postings[term])
             result += "\n"
 
         self.WriteToFile("blocks/"+str(block_index), result)
