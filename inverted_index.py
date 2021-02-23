@@ -271,7 +271,7 @@ class InvertedIndex:
                     A tuple containing the (len of posting list, the list of posting list for given term)
         """
 
-        print("Loading Posting List for term in memory...")
+        # print("Loading Posting List for term in memory...")
 
         offset = self.GetOffset(term)
         if offset == -1:
