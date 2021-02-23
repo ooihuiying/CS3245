@@ -187,12 +187,14 @@ class InvertedIndex:
 
         q = PriorityQueue()
 
-        # (2) INITIAL STEP OF K WAY MERGE:
+        lines_per_block_mem = [0] * total_num_blocks
+        # (2) INITIAL STEP OF K WAY MERGE: Read in a batch of lines from each block file
         for block_num in range(0, total_num_blocks):
             for li in range(0, lines_to_read_per_block):
                 line = self.ReadFromFile("blocks/" + str(block_num), blocks_offset[block_num], read_file_pointers[block_num])
                 blocks_offset[block_num] = blocks_offset[block_num] + len(line) + 1 # 1 for \n
                 q.put(QueueItem(line, block_num))
+                lines_per_block_mem[block_num] += 1
 
         # K_WAY
         while not q.empty():
@@ -202,6 +204,8 @@ class InvertedIndex:
             curr_term = curr_item.GetTerm()
             curr_posting_list = curr_item.GetPostingList()
             curr_block = curr_item.GetBlockNum()
+
+            lines_per_block_mem[curr_block] -= 1
 
             # Encountering new term, End of prev term
             if curr_term != term_to_write and term_to_write != '':
@@ -218,14 +222,12 @@ class InvertedIndex:
                 doc_ids_to_write = []
 
             if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
-                for i in range(0, len(result_doc_ids_to_write)):
-                    self.WriteToFile(self.out_postings, result_doc_ids_to_write[i], True, write_posting_file_pointer)
-                    self.WriteToFile(self.out_dict, result_term_to_write[i], True, write_dict_file_pointer)
+                self.WriteToFile(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
+                self.WriteToFile(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
 
                 curr_lines_in_mem = 0
                 result_doc_ids_to_write = []
                 result_term_to_write = []
-
 
             term_to_write = curr_term
 
@@ -233,13 +235,18 @@ class InvertedIndex:
                 if len(doc_ids_to_write) == 0 or int(doc_id) != int(doc_ids_to_write[-1]):
                     doc_ids_to_write.append(doc_id)
 
-            # Check if can add next line in the block to queue
-            line = self.ReadFromFile("blocks/" + str(curr_block), blocks_offset[curr_block], read_file_pointers[curr_block])
-            # End of File
-            if line == '':
-                continue
-            blocks_offset[curr_block] = blocks_offset[curr_block] + len(line) + 1  # 1 for \n
-            q.put(QueueItem(line, curr_block))
+            # When all the lines from curr_block has been processed, we add in the next batch of
+            # lines from the block
+            if lines_per_block_mem[curr_block] == 0:
+                for li in range(0, lines_to_read_per_block):
+                    line = self.ReadFromFile("blocks/" + str(curr_block), blocks_offset[curr_block], read_file_pointers[curr_block])
+                    # End of File
+                    if line == '':
+                        break
+                    blocks_offset[curr_block] = blocks_offset[curr_block] + len(line) + 1  # 1 for \n
+                    q.put(QueueItem(line, curr_block))
+                    lines_per_block_mem[curr_block] += 1
+
 
 
         # Add last Term and its' posting lists to result
@@ -248,9 +255,8 @@ class InvertedIndex:
             result_doc_ids_to_write.append(content)
             result_term_to_write.append(term_to_write + " " + str(len(doc_ids_to_write)) + " " + str(posting_file_line_offset + 1) + "\n")  # Term Size Offset
         # Write result in mem to file
-        for i in range(0, len(result_doc_ids_to_write)):
-            self.WriteToFile(self.out_postings, result_doc_ids_to_write[i], True, write_posting_file_pointer)
-            self.WriteToFile(self.out_dict, result_term_to_write[i], True, write_dict_file_pointer)
+        self.WriteToFile(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
+        self.WriteToFile(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
 
 
     def WriteToFile(self, out_file, result, append = False, fw = None):
