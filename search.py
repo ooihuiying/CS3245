@@ -1,10 +1,14 @@
 #!/usr/bin/python3
 import re
+import string
+
 import nltk
 import sys
 import getopt
 
 from inverted_index import InvertedIndex
+from query import QueryParser
+
 
 def usage():
     print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results")
@@ -31,19 +35,60 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     ############################################
     # Example code below to demonstrate how search.py may use InvertedIndex class to retrieve posting lists for term etc.....
 
-    inverted_index_class = InvertedIndex()
+    inverted_index_class = InvertedIndex(out_dict=dict_file, out_postings=postings_file)
+
+
+    f = open(queries_file, 'r')
+    for query in f.readlines():
+
+        query = QueryParser.parse(query)
+        posting_list = query.evaluate(inverted_index_class)
+        print("Query: {}".format(query))
+        print(" ".join(posting_list) + "\n")
+
 
     # Get the corresponding posting List for Term -> "brake"
-    query = "brake"
-    size, posting_list = inverted_index_class.GetPostingListForTerm(query)
-    for p in posting_list:
-        print(p, end = " ")
-    print("\n")
+    # query = "brake"
+    # size, posting_list = inverted_index_class.GetPostingListForTerm(query)
+    # for p in posting_list:
+    #     print(p, end = " ")
+    # print("\n")
+
+    # AND
+    # term1 AND term2
+    # OR
+    # term1 OR term2
+
+    # NOT
+    # NOT term1
+
+    # NOT term1 AND term2
+    # NOT term1 AND NOT term2
+
+    # NOT term1 OR  term2
+    # NOT term1 OR NOT term2
+
+    # term1 AND (term2 OR term3)
+    # (term1 AND term2) OR term3
+
+    # NOT term1 AND (term2 OR term3)
+    # term1 AND (NOT term2 OR term3)
+    # NOT (term1 AND term2) OR term3
+
+    # (term1 AND term2) OR term3
+
+    # A OR B OR (C AND D) OR
+    # A + B + CD + ...
+
+    # A AND B AND C AND (D OR E)
+    # A AND B AND C AND D OR A AND B AND C AND E
+    # ABCD + ABCE # DNF (this one better)
+    # ABC (D + E) # CNF
 
     # Obtain the skip list for current postingList
-    skip_list = inverted_index_class.GetSkipPointers(posting_list)
-    for s in skip_list:
-        print(s, end = " ")
+    # skip_list = inverted_index_class.GetSkipPointers(posting_list)
+    # for s in skip_list:
+    #     print(s, end = " ")
 
     ############################################
 

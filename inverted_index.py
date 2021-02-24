@@ -271,15 +271,15 @@ class InvertedIndex:
                     A tuple containing the (len of posting list, the list of posting list for given term)
         """
 
-        print("Loading Posting List for term in memory...")
+        # print("Loading Posting List for term in memory...")
 
         offset = self.GetOffset(term)
         if offset == -1:
             # Term not found
-            return []
+            return 0, []
 
         line = self.ReadFromFile(self.out_postings, offset)
-        split_line = line.split(" ")
+        split_line = line.strip().split(" ")
 
         # remove first 2 items in the line which contains term value & size
         return split_line[1], split_line[2:]
