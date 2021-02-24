@@ -182,15 +182,15 @@ class InvertedIndex:
         if lines_to_read_per_block == 0:
             # If the block size limit is smaller than the total num of blocks
             lines_to_read_per_block = 1
-
+        print(lines_to_read_per_block)
         q = PriorityQueue()
 
         lines_per_block_mem = [0] * total_num_blocks
         # (2) INITIAL STEP OF K WAY MERGE: Read in a batch of lines from each block file
         for block_num in range(0, total_num_blocks):
-            for li in range(0, lines_to_read_per_block):
-                line = self.ReadFromFile("blocks/" + str(block_num), blocks_offset[block_num], read_file_pointers[block_num])
-                blocks_offset[block_num] = blocks_offset[block_num] + len(line) + 1 # 1 for \n
+            lines = self.ReadFromFile("blocks/" + str(block_num), blocks_offset[block_num], read_file_pointers[block_num], lines_to_read_per_block)
+            for line in lines:
+                blocks_offset[block_num] = blocks_offset[block_num] + len(line) + 1  # 1 for \n
                 q.put(QueueItem(line, block_num))
                 lines_per_block_mem[block_num] += 1
 
@@ -236,11 +236,8 @@ class InvertedIndex:
             # When all the lines from curr_block has been processed, we add in the next batch of
             # lines from the block
             if lines_per_block_mem[curr_block] == 0:
-                for li in range(0, lines_to_read_per_block):
-                    line = self.ReadFromFile("blocks/" + str(curr_block), blocks_offset[curr_block], read_file_pointers[curr_block])
-                    # End of File
-                    if line == '':
-                        break
+                lines = self.ReadFromFile("blocks/" + str(curr_block), blocks_offset[curr_block], read_file_pointers[curr_block], lines_to_read_per_block)
+                for line in lines:
                     blocks_offset[curr_block] = blocks_offset[curr_block] + len(line) + 1  # 1 for \n
                     q.put(QueueItem(line, curr_block))
                     lines_per_block_mem[curr_block] += 1
@@ -336,13 +333,14 @@ class InvertedIndex:
 
         return skip_pointers
 
-    def ReadFromFile(self, in_file, offset = None, f = None):
+    def ReadFromFile(self, in_file, offset = None, f = None, num_lines = 1):
         """
                 Method to Read in the contents of in_file.
                 Params:
                     in_file: file path
                     offset: Optional offset to read from file
                     f: File Opener to in_file
+                    num_lines: Lines to read
                 Return:
                     Returns either all the lines or a single line
         """
@@ -353,6 +351,15 @@ class InvertedIndex:
         if offset == None:
             return f.readlines()
         else:
-            f.seek(0)
             f.seek(offset)
-            return f.readline()
+
+            if num_lines == 1:
+                return f.readline()
+
+            lines = []
+            for i in range(0, num_lines):
+                new_line = f.readline()
+                if len(new_line.strip()) == 0:
+                    break
+                lines.append(new_line)
+            return lines
