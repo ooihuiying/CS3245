@@ -17,7 +17,6 @@ class InvertedIndex:
         - We will write out a subset of the posting list to block files under /block folder using SPIMI-Invert method.
         - Once all those block files have been filled, we will then process all these block files together
         - and append to posting.txt using the BISC k-way merge
-
         search.py can use inverted_index.py to retrieve terms' posting lists, skip pointers.
         - Loading dictionary from memory will be done at class constructor.
         - Only self.dictionary will have contents.
@@ -48,7 +47,6 @@ class InvertedIndex:
     def ConstructIndex(self):
         """
                    Method to read the data file and fill up self.postings and self.dictionary.
-
                    Current implementation only removes punctuations, case folding and do word stemming.
                    It does not remove stop words.
         """
@@ -299,10 +297,8 @@ class InvertedIndex:
     def GetPostingListForTerm(self, term):
         """
                 Method to obtain the list of posting list for input term.
-
                 Params:
                     term: term value
-
                 Returns:
                     Returns a tuple of (len of posting list, the list of posting list for given term)
         """
@@ -360,5 +356,3 @@ class InvertedIndex:
             f.seek(0)
             f.seek(offset)
             return f.readline()
-
-
