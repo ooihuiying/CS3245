@@ -300,7 +300,6 @@ class InvertedIndex:
                     Returns a tuple of (len of posting list, the list of posting list for given term)
         """
 
-        print("Loading Posting List for term in memory...")
         try:
             size_of_posting_list, offset = self.dictionary[term]
             line = self.ReadFromFile(self.out_postings, int(offset))
