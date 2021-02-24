@@ -13,7 +13,7 @@ from query import QueryParser
 # -d test-dictionary.txt -p test-postings.txt
 
 def usage():
-    print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results")
+    print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file")
 
 def TestSingleQuery(inverted_index_class):
 
@@ -154,7 +154,7 @@ def run_test(dict_file, postings_file):
 dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
+    opts, args = getopt.getopt(sys.argv[1:], 'd:p:')
 except getopt.GetoptError:
     usage()
     sys.exit(2)
