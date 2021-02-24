@@ -115,9 +115,18 @@ class QueryParser:
                 tokens.append(Token.NOT)
             elif chunk[0] == "(":
                 tokens.append(Token.LB)
-                tokens.append(chunk[1:].strip())
+                rb = chunk.find(")")
+                remaining = chunk[1:].strip()
+                if rb != -1:
+                    remaining = chunk[1:rb].strip()
+                    tokens.append(remaining)
+                    tokens.append(Token.RB)
+                elif len(remaining) > 0:
+                    tokens.append(remaining)
             elif chunk[-1] == ")":
-                tokens.append(chunk[:-1].strip())
+                remaining = chunk[:-1].strip()
+                if len(remaining) > 0:
+                    tokens.append(remaining)
                 tokens.append(Token.RB)
             else:
                 tokens.append(chunk)

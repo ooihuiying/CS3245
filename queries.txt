@@ -1,1 +1,2 @@
-profit AND (cumulative AND sugar AND imports OR car) AND profit
+(A)
+( A AND B )
