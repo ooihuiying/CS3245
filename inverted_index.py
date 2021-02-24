@@ -182,7 +182,7 @@ class InvertedIndex:
         if lines_to_read_per_block == 0:
             # If the block size limit is smaller than the total num of blocks
             lines_to_read_per_block = 1
-        print(lines_to_read_per_block)
+
         q = PriorityQueue()
 
         lines_per_block_mem = [0] * total_num_blocks
