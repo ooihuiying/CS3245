@@ -42,9 +42,10 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     for query in f.readlines():
 
         query = QueryParser.parse(query)
+        print(query.__str__())
         posting_list = query.evaluate(inverted_index_class)
         print("Query: {}".format(query))
-        print(" ".join(posting_list) + "\n")
+        print(" ".join([str(int) for int in posting_list]) + "\n")
 
 
     # Get the corresponding posting List for Term -> "brake"

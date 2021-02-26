@@ -297,17 +297,25 @@ class InvertedIndex:
                 Params:
                     term: term value
                 Returns:
-                    Returns a tuple of (len of posting list, the list of posting list for given term)
+                    Returns the list of posting list for given term
         """
 
         try:
             size_of_posting_list, offset = self.dictionary[term]
             line = self.ReadFromFile(self.out_postings, int(offset))
             split_line = line.rstrip('\n').split(" ")
-            return size_of_posting_list, split_line[1:]  # remove first item in the line which contains term value
+            int_list = [int(i) for i in split_line[1:]]# remove first item in the line which contains term value
+            return int_list
         except:
             # Term not found
-            return 0, []
+            return []
+
+    def GetSizeForTerm(self, term):
+        try:
+            size_of_posting_list, offset = self.dictionary[term]
+            return size_of_posting_list
+        except:
+            return 0
 
     def GetSkipPointers(self, posting_list):
         """
@@ -319,7 +327,6 @@ class InvertedIndex:
                 Returns:
                     skip_pointers_list
         """
-        print("Constructing Skip Pointers...")
 
         skip_pointers = []
         jump = ceil(sqrt(len(posting_list)))
