@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import re
 import string
+import time
 
 import nltk
 import sys
@@ -37,16 +38,18 @@ def run_search(dict_file, postings_file, queries_file, results_file):
 
     inverted_index_class = InvertedIndex(out_dict=dict_file, out_postings=postings_file)
 
+    start_time = time.perf_counter()
+    n = 0
+    with open(queries_file, 'r') as f:
+        for query in f:
+            n += 1
+            query = QueryParser.parse(query)
+            print(query.__str__())
+            posting_list = query.evaluate(inverted_index_class)
+            print("Query #{}: {} --> {} results".format(n, query, len(posting_list)))
+            # print(" ".join([str(int) for int in posting_list]) + "\n")
 
-    f = open(queries_file, 'r')
-    for query in f.readlines():
-
-        query = QueryParser.parse(query)
-        print(query.__str__())
-        posting_list = query.evaluate(inverted_index_class)
-        print("Query: {}".format(query))
-        print(" ".join([str(int) for int in posting_list]) + "\n")
-
+    print("{} queries completed in {:.2f}s".format(n, time.perf_counter() - start_time))
 
     # Get the corresponding posting List for Term -> "brake"
     # query = "brake"

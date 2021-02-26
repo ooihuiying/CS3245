@@ -32,6 +32,15 @@ class InvertedIndex:
         self.in_dir = in_dir
         self.out_dict = out_dict
         self.out_postings = out_postings
+        self.all_files = set()
+        try:
+            with open("document_id_list.txt") as f:
+                for line in f.readlines():
+                    self.all_files.update([int(i) for i in line.split(",")])
+        except FileNotFoundError:
+            print("Doc id list not created")
+
+
 
         # self.dictionary set is a dictionary where the key is the term name
         # and the value is a tuple of (size of posting list, offset from top line of posting.txt)
@@ -70,6 +79,9 @@ class InvertedIndex:
         postings = defaultdict(list)  # key: Term, Value: List of doc_id
         dictionary = set()  # Terms
         stem_dict = {}
+
+        with open("document_id_list.txt", 'w') as f:
+            f.write(",".join([str(i) for i in sorted(all_files)]))
 
         start_time = time.perf_counter()
         # Read in ascending order of their file names

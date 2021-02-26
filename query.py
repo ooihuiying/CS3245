@@ -2,6 +2,8 @@ import string
 
 import nltk
 
+from inverted_index import InvertedIndex
+
 stemmer = nltk.PorterStemmer()
 translator = str.maketrans('', '', string.punctuation)
 
@@ -100,7 +102,7 @@ class QueryAnd(Query):
 
         # Sort ops by size, evaluate from small to large
         sorted_ops = sorted(self.ops_size.items(), key=lambda x: x[1])
-        lists = [op[0].evaluate(inverted_index) for op in sorted_ops]
+        lists = [list(op[0].evaluate(inverted_index)) for op in sorted_ops]
         merged_list = lists[0]
         for each_list in lists:
             merged_list = self._mergeTwoLists(inverted_index, merged_list, each_list)
@@ -156,8 +158,13 @@ class QueryNot(Query):
         # new_op.is_flipped = not new_op.is_flipped
         # return new_op
 
-    def evaluate(self, inverted_index):
-        return self.operand1.evaluate(inverted_index)
+    def evaluate(self, inverted_index:InvertedIndex):
+        # TODO remove temporary naive implementation
+        matches = self.operand1.evaluate(inverted_index)
+        return inverted_index.all_files.difference(matches)
+
+    def getSize(self, inverted_index):
+        return self.operand1.getSize(inverted_index)
 
     def __str__(self):
         return "¬{}".format(self.operand1)
