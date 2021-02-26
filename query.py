@@ -88,6 +88,15 @@ class QueryAnd(Query):
 
         # Evaluate op first then call getSize()
         evaluated_op_list = [(op.evaluate(inverted_index), op.getSize(inverted_index)) for op in self.ops]
+
+        """
+        # Uncomment to view size
+        print("++++++++++++++")
+        for op in self.ops:
+            print(op.__str__())
+            print(op.getSize(inverted_index))
+        """
+
         # Sort by evaluated op size
         sorted_evaluated_op_list = sorted(evaluated_op_list, key=lambda x: x[1])
 
