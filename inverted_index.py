@@ -1,6 +1,8 @@
 import os
 import shutil
 import string
+import time
+
 from queue_item import QueueItem
 from queue import PriorityQueue
 from math import sqrt
@@ -67,40 +69,49 @@ class InvertedIndex:
 
         postings = defaultdict(list)  # key: Term, Value: List of doc_id
         dictionary = set()  # Terms
+        stem_dict = {}
 
+        start_time = time.perf_counter()
         # Read in ascending order of their file names
         for doc_id in sorted(all_files):
-            for line in self.ReadFromFile(self.in_dir + "/" + str(doc_id)):
-                # Tokenize by sentences
-                for s_token in sent_tokenize(line):
-                    # Tokenize by word
-                    for w_token in word_tokenize(s_token):
+            with open(os.path.join(self.in_dir, str(doc_id))) as file:
+                for line in file:
+                    # Tokenize by sentences
+                    for s_token in sent_tokenize(line):
+                        # Tokenize by word
+                        for w_token in word_tokenize(s_token):
 
-                        # Remove Punctuation
-                        w_token = w_token.translate(translator)
+                            # Remove Punctuation & Case-Folding
+                            w_token = w_token.translate(translator).lower()
 
-                        # Word Stemming & Case-Folding
-                        term = stemmer.stem(w_token).lower()
+                            # Word Stemming
+                            if w_token in stem_dict:
+                                term = stem_dict[w_token]
+                            else:
+                                term = stemmer.stem(w_token)
+                                stem_dict[w_token] = term
 
-                        # Remove numbers
-                        if w_token.isnumeric() or len(term) == 0:
-                            continue
+                            # Remove numbers
+                            if w_token.isnumeric() or len(term) == 0:
+                                continue
 
-                        curr_lines_in_mem += 1
-                        if term not in dictionary:
-                            dictionary.add(term)
+                            curr_lines_in_mem += 1
+                            if term not in dictionary:
+                                dictionary.add(term)
 
-                        if str(doc_id) not in postings[term]:
-                            postings[term].append(str(doc_id))
+                            if doc_id not in postings[term]:
+                                postings[term].append(doc_id)
 
-                        # Write the previous items to new block
-                        if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
-                            self.WriteBlockToDisk(block_index, postings, dictionary)
-                            # Reset
-                            curr_lines_in_mem = 0
-                            postings = defaultdict(list)
-                            dictionary = set()
-                            block_index += 1
+                            # Write the previous items to new block
+                            if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
+                                self.WriteBlockToDisk(block_index, postings, dictionary)
+                                print("Create block {} ({:.2f}s)".format(block_index, time.perf_counter() - start_time))
+                                start_time = time.perf_counter()
+                                # Reset
+                                curr_lines_in_mem = 0
+                                postings = defaultdict(list)
+                                dictionary = set()
+                                block_index += 1
 
         # Write last block if exists
         if curr_lines_in_mem > 0:
@@ -137,15 +148,13 @@ class InvertedIndex:
                         - dictionary: List of all the terms
         """
 
-        print("Create new block ... " + str(block_index))
-
         result = ""
         # Sort Dictionary Terms. Line 11 of SPIMI - INVERT
         for term in sorted(dictionary):
             result += term + " "
             # No need to sort postings because they are already in sorted form when we processed
             # the docs in ascending order previously
-            result += " ".join(postings[term])
+            result += " ".join([str(i) for i in postings[term]])
             result += "\n"
 
         self.WriteToFile("blocks/"+str(block_index), result)
