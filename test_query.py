@@ -25,10 +25,10 @@ def TestSingleQuery(inverted_index_class):
     query = QueryParser.parse("(a)")
     assert query.__str__() == 'a'
     posting_list = query.evaluate(inverted_index_class)
-    print(posting_list)
     assert posting_list == [0]
 
 def TestAndQueries(inverted_index_class):
+
     # Single AND
     query = QueryParser.parse("a AND b")
     assert query.__str__() == 'a∧b'
@@ -92,14 +92,13 @@ def TestOrQueries(inverted_index_class):
 
 def TestNotQueries(inverted_index_class):
     # Single NOT
-    # query = QueryParser.parse("NOT z")
-    # assert query.__str__() == '¬z'
-    # posting_list = query.evaluate(inverted_index_class)
-    # print(posting_list)
-    # assert len(posting_list) == 0
-    return False
+    query = QueryParser.parse("NOT z")
+    assert query.__str__() == '¬z'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [3]
 
 def TestMixQueries(inverted_index_class):
+
     query = QueryParser.parse("(a OR r) AND (r AND z)")
     assert query.__str__() == 'a∨r∧r∧z'
     posting_list = query.evaluate(inverted_index_class)
