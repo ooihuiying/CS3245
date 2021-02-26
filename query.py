@@ -77,7 +77,6 @@ class QueryOr(Query):
         if self.size == None:
             # Don't evaluate more than once
             self.size, self.union = self._evaluate(inverted_index)
-
         return self.size
 
     def __str__(self):
@@ -89,6 +88,7 @@ class QueryAnd(Query):
         super().__init__()
         self.ops = ops
         self.ops_size = {} # Dictionary to hold [op: size]
+        self.total_subquery_size = None
 
     def evaluate(self, inverted_index):
         if len(self.ops) == 0:
@@ -100,11 +100,13 @@ class QueryAnd(Query):
 
         # Sort ops by size, evaluate from small to large
         sorted_ops = sorted(self.ops_size.items(), key=lambda x: x[1])
+
         lists = [op[0].evaluate(inverted_index) for op in sorted_ops]
         merged_list = lists[0]
         for each_list in lists:
             merged_list = self._mergeTwoLists(inverted_index, merged_list, each_list)
 
+        self.total_subquery_size = len(merged_list)
         return merged_list
 
     def _mergeTwoLists(self, invertedIndex, list1, list2):
@@ -141,7 +143,13 @@ class QueryAnd(Query):
             curr_size = op.getSize(inverted_index)
             total_size += int(curr_size)
             self.ops_size[op] = int(curr_size)
-        return total_size
+
+        # Return self.total_subquery_size when this particular QueryAND has been evaluated and this getSize method
+        # is called by another Query obj.
+        # Otherwise, it means getSize was called by the current QueryAnd obj and we return its' already evaluated Ops of
+        # the current QueryAnd obj which is total_size. In this case, the total_size val is not used and we actually only
+        # am concerned with populating self.ops_size.
+        return self.total_subquery_size or total_size
 
     def __str__(self):
         return "∧".join([op.__str__() for op in self.ops])
