@@ -139,9 +139,11 @@ class QueryAnd(Query):
 
     # TODO: Double check this total_size
     def getSize(self, inverted_index):
+        self.total_size = 0
         for op in self.ops:
             curr_size = op.getSize(inverted_index)
-            self.ops_size[op] = int(curr_size)
+            self.ops_size[op] = curr_size
+            self.total_size += curr_size
 
         # Return self.total_size when this particular QueryAND has been evaluated and this getSize method
         # is called by another Query obj.
