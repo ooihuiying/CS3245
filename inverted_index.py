@@ -4,15 +4,12 @@ import string
 from queue_item import QueueItem
 from queue import PriorityQueue
 from math import sqrt
-from math import ceil
+from math import ceil, floor
 from nltk.tokenize import word_tokenize
 from nltk.tokenize import sent_tokenize
 from nltk.stem.porter import PorterStemmer
 
 from collections import defaultdict
-
-# For this assignment, you can set an artificial threshold (e.g., after a certain number of pairs
-# have been processed) so that your system process those pairs as a block.
 
 class InvertedIndex:
     """
@@ -20,14 +17,12 @@ class InvertedIndex:
         - We will write out a subset of the posting list to block files under /block folder using SPIMI-Invert method.
         - Once all those block files have been filled, we will then process all these block files together
         - and append to posting.txt using the BISC k-way merge
-        - self.postings and self.dictionary will have contents.
-
         search.py can use inverted_index.py to retrieve terms' posting lists, skip pointers.
         - Loading dictionary from memory will be done at class constructor.
-        - Only self.dictionary will have contents. self.postings will be empty as we do not need to load everything from disk to mem.
+        - Only self.dictionary will have contents.
     """
 
-    BLOCK_SIZE_LIMIT = 100000
+    MAX_LINES_TO_HOLD_IN_MEM = 100000
 
     def __init__(self, in_dir = "", out_dict = "dictionary.txt", out_postings = "postings.txt"):
         print("Initialise Inverted Indexes...")
@@ -36,15 +31,9 @@ class InvertedIndex:
         self.out_dict = out_dict
         self.out_postings = out_postings
 
-        # Data Structures to be read for creating files
-        # To be used for creating indexes
-        self.postings = defaultdict(list) # key: Term, Value: List of doc_id
-        self.dictionary = set() # Terms
-
-        # line_offset list tells us the offset value for each line in the posting file
-        # To be used for fulfilling search queries
-        self.line_offset = []
-
+        # self.dictionary set is a dictionary where the key is the term name
+        # and the value is a tuple of (size of posting list, offset from top line of posting.txt)
+        self.dictionary = {}
         # Load Dictionary Terms into memory when search.py initialises inverted_index
         if in_dir == "":
             self.LoadDictionaryFromMem()
@@ -58,7 +47,6 @@ class InvertedIndex:
     def ConstructIndex(self):
         """
                    Method to read the data file and fill up self.postings and self.dictionary.
-
                    Current implementation only removes punctuations, case folding and do word stemming.
                    It does not remove stop words.
         """
@@ -68,7 +56,7 @@ class InvertedIndex:
         translator = str.maketrans('','', string.punctuation)
 
         block_index = 0
-        curr_block_size = 0
+        curr_lines_in_mem = 0 # Number of term-posting list pair
 
         self.ResetFiles()
 
@@ -76,6 +64,9 @@ class InvertedIndex:
         all_files = []
         for doc_id in os.listdir(self.in_dir):
             all_files.append(int(doc_id))
+
+        postings = defaultdict(list)  # key: Term, Value: List of doc_id
+        dictionary = set()  # Terms
 
         # Read in ascending order of their file names
         for doc_id in sorted(all_files):
@@ -95,22 +86,28 @@ class InvertedIndex:
                         if w_token.isnumeric() or len(term) == 0:
                             continue
 
-                        if term not in self.dictionary:
-                            self.dictionary.add(term)
-                        if str(doc_id) not in self.postings[term]:
-                            self.postings[term].append(str(doc_id))
+                        curr_lines_in_mem += 1
+                        if term not in dictionary:
+                            dictionary.add(term)
 
-                        curr_block_size += 1
+                        if str(doc_id) not in postings[term]:
+                            postings[term].append(str(doc_id))
 
                         # Write the previous items to new block
-                        if curr_block_size == self.BLOCK_SIZE_LIMIT:
-                            self.WriteBlockToDisk(block_index)
-                            curr_block_size = 0
+                        if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
+                            self.WriteBlockToDisk(block_index, postings, dictionary)
+                            # Reset
+                            curr_lines_in_mem = 0
+                            postings = defaultdict(list)
+                            dictionary = set()
                             block_index += 1
 
-        # Write last block
-        self.WriteBlockToDisk(block_index)
-        self.MergeBlocks(block_index)
+        # Write last block if exists
+        if curr_lines_in_mem > 0:
+            self.WriteBlockToDisk(block_index, postings, dictionary)
+            self.MergeBlocks(block_index + 1)
+        else :
+            self.MergeBlocks(block_index)
 
     def ResetFiles(self):
         """
@@ -130,30 +127,28 @@ class InvertedIndex:
         if os.path.exists(self.out_dict):
             os.remove(self.out_dict)
 
-    def WriteBlockToDisk(self, block_index):
+    def WriteBlockToDisk(self, block_index, postings, dictionary):
         """
-                    Method to write the contents of posting lists (stored as self.postings in memory) to a new block file
+                    Method to write the contents of posting lists to a new block file
                     SPIMI-Invert
                     Params:
                         - block_index: Gives us the file name
+                        - postings: List of all the posting lists
+                        - dictionary: List of all the terms
         """
-        print("create new block ... " + str(block_index))
+
+        print("Create new block ... " + str(block_index))
 
         result = ""
         # Sort Dictionary Terms. Line 11 of SPIMI - INVERT
-        for term in sorted(self.dictionary):
+        for term in sorted(dictionary):
             result += term + " "
             # No need to sort postings because they are already in sorted form when we processed
             # the docs in ascending order previously
-            for doc_id in self.postings[term]:
-                result += doc_id + " "
+            result += " ".join(postings[term])
             result += "\n"
 
         self.WriteToFile("blocks/"+str(block_index), result)
-
-        # Clear Postings and Dictionary from memory
-        self.postings = defaultdict(list)
-        self.dictionary = set()
 
 
     def MergeBlocks(self, total_num_blocks):
@@ -163,40 +158,74 @@ class InvertedIndex:
                     Params:
                         - total_num_blocks: Total number of block files that we want to merge
         """
-        print("Merge all blocks ...")
+        print("Merge all " + str(total_num_blocks) + " blocks ...")
 
+        # (1) INITIALISE VARIABLES
         # blocks_offset[i] stores the offset value for reading from file of block i
         blocks_offset = [0] * total_num_blocks
 
-        q = PriorityQueue()
-
-        # Add the first line of each block to priority queue
+        read_file_pointers = [0] * total_num_blocks
         for block_num in range(0, total_num_blocks):
-            line = self.ReadFromFile("blocks/"+str(block_num), blocks_offset[block_num])
-            blocks_offset[block_num] = blocks_offset[block_num] + len(line) + 1 # 1 for \n
-            q.put(QueueItem(line, block_num))
+            read_file_pointers[block_num] = open("blocks/" + str(block_num), 'r')
 
-        # K-Way
+        write_posting_file_pointer = open(self.out_postings, 'a')
+        write_dict_file_pointer = open(self.out_dict, 'a')
+
         term_to_write = ''
         doc_ids_to_write = []
+        result_doc_ids_to_write = []
+        result_term_to_write = []
+        curr_lines_in_mem = 0
+        posting_file_line_offset = 0
 
+        lines_to_read_per_block = floor(self.MAX_LINES_TO_HOLD_IN_MEM / total_num_blocks)
+        if lines_to_read_per_block == 0:
+            # If the block size limit is smaller than the total num of blocks
+            lines_to_read_per_block = 1
+
+        q = PriorityQueue()
+
+        lines_per_block_mem = [0] * total_num_blocks
+        # (2) INITIAL STEP OF K WAY MERGE: Read in a batch of lines from each block file
+        for block_num in range(0, total_num_blocks):
+            lines = self.ReadFromFile("blocks/" + str(block_num), blocks_offset[block_num], read_file_pointers[block_num], lines_to_read_per_block)
+            for line in lines:
+                blocks_offset[block_num] = blocks_offset[block_num] + len(line) + 1  # 1 for \n
+                q.put(QueueItem(line, block_num))
+                lines_per_block_mem[block_num] += 1
+
+        # K_WAY
         while not q.empty():
 
             # Process current Item in the queue
             curr_item = q.get()
             curr_term = curr_item.GetTerm()
-            curr_posting_list = curr_item.GetLine().split(" ")[1:-1]
+            curr_posting_list = curr_item.GetPostingList()
             curr_block = curr_item.GetBlockNum()
 
-            # Encountering new term -> need to append previous term and it's doc_ids to posting.txt
-            # TODO: Should not write out to memory each time we encounter a new term
-            if curr_term != term_to_write and term_to_write != '':
-                content = term_to_write + " " + str(len(doc_ids_to_write)) + " " + " ".join(doc_ids_to_write)
-                self.WriteToFile(self.out_postings, content + "\n", True)
-                self.WriteToFile(self.out_dict, term_to_write + "\n", True)
+            lines_per_block_mem[curr_block] -= 1
 
-                # Reset
+            # Encountering new term, End of prev term
+            if curr_term != term_to_write and term_to_write != '':
+
+                content = term_to_write + " " + " ".join(doc_ids_to_write) + "\n"
+                result_doc_ids_to_write.append(content)
+                result_term_to_write.append(term_to_write + " " + str(len(doc_ids_to_write)) + " " + str(posting_file_line_offset) + "\n") # Term Size Offset
+                posting_file_line_offset += len(content) + 1
+
+                # Complete posting list of prev term, hence increment to indicate new line in posting.txt
+                curr_lines_in_mem += 1
+
+                # Reset for new term
                 doc_ids_to_write = []
+
+            if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
+                self.WriteToFile(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
+                self.WriteToFile(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
+
+                curr_lines_in_mem = 0
+                result_doc_ids_to_write = []
+                result_term_to_write = []
 
             term_to_write = curr_term
 
@@ -204,25 +233,28 @@ class InvertedIndex:
                 if len(doc_ids_to_write) == 0 or int(doc_id) != int(doc_ids_to_write[-1]):
                     doc_ids_to_write.append(doc_id)
 
-            # Check if can add next line in the block to queue
-            line = self.ReadFromFile("blocks/" + str(curr_block), blocks_offset[curr_block])
-            # End of File
-            if line == '':
-                continue
-
-            # Add next line in current block to queue
-            queue_item = QueueItem(line, curr_block)
-            blocks_offset[curr_block] = blocks_offset[curr_block] + len(line) + 1 # 1 for \n
-            q.put(queue_item)
+            # When all the lines from curr_block has been processed, we add in the next batch of
+            # lines from the block
+            if lines_per_block_mem[curr_block] == 0:
+                lines = self.ReadFromFile("blocks/" + str(curr_block), blocks_offset[curr_block], read_file_pointers[curr_block], lines_to_read_per_block)
+                for line in lines:
+                    blocks_offset[curr_block] = blocks_offset[curr_block] + len(line) + 1  # 1 for \n
+                    q.put(QueueItem(line, curr_block))
+                    lines_per_block_mem[curr_block] += 1
 
 
-        # For the last term - posting lists
-        content = term_to_write + " " + str(len(doc_ids_to_write)) + " " + " ".join(doc_ids_to_write)
-        self.WriteToFile(self.out_postings, content + "\n", True)
-        self.WriteToFile(self.out_dict, term_to_write + "\n", True)
+
+        # Add last Term and its' posting lists to result
+        if len(doc_ids_to_write) > 0:
+            content = term_to_write + " " + " ".join(doc_ids_to_write) + "\n"
+            result_doc_ids_to_write.append(content)
+            result_term_to_write.append(term_to_write + " " + str(len(doc_ids_to_write)) + " " + str(posting_file_line_offset + 1) + "\n")  # Term Size Offset
+        # Write result in mem to file
+        self.WriteToFile(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
+        self.WriteToFile(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
 
 
-    def WriteToFile(self, out_file, result, append = False):
+    def WriteToFile(self, out_file, result, append = False, fw = None):
         """
                 Method to Write to out_file.
                 Params:
@@ -230,13 +262,12 @@ class InvertedIndex:
                     result: Text to store in out_file
         """
 
-        if not append:
+        if not append and fw == None:
             fw = open(out_file, 'w+')
-            fw.write(''.join(result))
-        else:
-            # Append to the end of the file
+        elif append and fw == None:
             fw = open(out_file, 'a')
-            fw.write(''.join(result))
+
+        fw.write(''.join(result))
 
 
     """
@@ -248,71 +279,43 @@ class InvertedIndex:
     def LoadDictionaryFromMem(self):
         """
                 Method to load the contents of dictionary.txt into self.dictionary set
-
                 Called by constructor when search.py initialises inverted index class
         """
         if len(self.dictionary) != 0:
             return
 
-        unsorted_dict = set()
-        for term in self.ReadFromFile(self.out_dict):
-            unsorted_dict.add(term.rstrip('\n'))
-
-        self.dictionary = sorted(unsorted_dict)
+        for term in self.ReadFromFile(self.out_dict): # dictionary.txt is already sorted
+            term = term.rstrip('\n').strip().split(" ")
+            term_name = term[0]
+            term_posting_len = term[1]
+            offset = term[2]
+            self.dictionary[term_name] = (term_posting_len, offset)
 
     def GetPostingListForTerm(self, term):
         """
                 Method to obtain the list of posting list for input term.
-
                 Params:
                     term: term value
-
                 Returns:
-                    A tuple containing the (len of posting list, the list of posting list for given term)
+                    Returns the list of posting list for given term
         """
-
-        # print("Loading Posting List for term in memory...")
-
-        offset = self.GetOffset(term)
-        if offset == -1:
-            # Term not found
-            return 0, []
-
-        line = self.ReadFromFile(self.out_postings, offset)
-        split_line = line.strip().split(" ")
-
-        # remove first 2 items in the line which contains term value & size
-        return split_line[1], split_line[2:]
-
-    def GetOffset(self, term):
-        """
-                Method to get offset of the term in postings.txt
-
-                The terms in posting.txt and dictionary.txt have the same ordering.
-                term_index: We deduce the line number that the term appears in the postings.txt
-                from it's position in the sorted list of dictionary set.
-                line_offset[term_index] tells us the offset value of term
-
-                Params:
-                    term: term value
-                    result: Text to store in out_file
-                Returns:
-                    offset value of term in postings.txt
-        """
-
-        # If self.line_offset has been constructed before, we skip this process
-        if len(self.line_offset) == 0:
-            offset = 0
-            for line in self.ReadFromFile(self.out_postings):
-                self.line_offset.append(offset)
-                offset += len(line) + 1 # 1 value is for accomodating \n
 
         try:
-            term_index = list(self.dictionary).index(term)
-            return self.line_offset[term_index]
+            size_of_posting_list, offset = self.dictionary[term]
+            line = self.ReadFromFile(self.out_postings, int(offset))
+            split_line = line.rstrip('\n').split(" ")
+            int_list = [int(i) for i in split_line[1:]]# remove first item in the line which contains term value
+            return int_list
         except:
             # Term not found
-            return -1;
+            return []
+
+    def GetSizeForTerm(self, term):
+        try:
+            size_of_posting_list, offset = self.dictionary[term]
+            return size_of_posting_list
+        except:
+            return 0
 
     def GetSkipPointers(self, posting_list):
         """
@@ -324,7 +327,6 @@ class InvertedIndex:
                 Returns:
                     skip_pointers_list
         """
-        print("Constructing Skip Pointers...")
 
         skip_pointers = []
         jump = ceil(sqrt(len(posting_list)))
@@ -337,23 +339,33 @@ class InvertedIndex:
 
         return skip_pointers
 
-    def ReadFromFile(self, in_file, offset = None):
+    def ReadFromFile(self, in_file, offset = None, f = None, num_lines = 1):
         """
                 Method to Read in the contents of in_file.
                 Params:
                     in_file: file path
                     offset: Optional offset to read from file
-
+                    f: File Opener to in_file
+                    num_lines: Lines to read
                 Return:
                     Returns either all the lines or a single line
         """
-        f = open(in_file, 'r')
+
+        if f == None:
+            f = open(in_file, 'r')
 
         if offset == None:
             return f.readlines()
         else:
-            f.seek(0)
             f.seek(offset)
-            return f.readline()
 
+            if num_lines == 1:
+                return f.readline()
 
+            lines = []
+            for i in range(0, num_lines):
+                new_line = f.readline()
+                if len(new_line.strip()) == 0:
+                    break
+                lines.append(new_line)
+            return lines

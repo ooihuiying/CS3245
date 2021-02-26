@@ -1,2 +1,4 @@
-(A)
-( A AND B )
+(10year)
+cropland
+( 10year AND cropland )
+(10mark OR 30th)

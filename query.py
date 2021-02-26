@@ -6,8 +6,9 @@ stemmer = nltk.PorterStemmer()
 translator = str.maketrans('', '', string.punctuation)
 
 # TODO: Add NOT functionality
-# TODO: Optimise queries (skip pointers, size of postings, AND NOT)
-# TODO: Create test data set to check correctness
+# TODO: Optimise queries (skip pointers, size of postings, AND NOT) - done skip pointers and size of posting
+# TODO: Create test data set to check correctness - partially done...
+
 class Query:
     def __init__(self):
         self.is_flipped = False
@@ -22,6 +23,9 @@ class Query:
         """
         raise NotImplementedError("evaluate not implemented")
 
+    def getSize(self, inverted_index):
+        raise NotImplementedError("getSize not implemented")
+
     def __str__(self):
         return "Query"
 
@@ -33,8 +37,11 @@ class QueryTerm(Query):
 
     def evaluate(self, inverted_index):
         # TODO maybe make this an iterator
-        _, docs = inverted_index.GetPostingListForTerm(self.term)
-        return set(docs)
+        docs = inverted_index.GetPostingListForTerm(self.term)
+        return docs
+
+    def getSize(self, inverted_index):
+        return inverted_index.GetSizeForTerm(self.term)
 
     def __str__(self):
         return self.term
@@ -44,14 +51,33 @@ class QueryOr(Query):
     def __init__(self, ops):
         super().__init__()
         self.ops = ops
+        self.union = None
+        self.size = None
 
     def evaluate(self, inverted_index):
-        union = self.ops[0].evaluate(inverted_index)
+        if self.union == None:
+            # Don't evaluate more than once
+            self.size, self.union = self._evaluate(inverted_index)
+
+        return self.union
+
+    def _evaluate(self, inverted_index):
+        # TODO: is there a better way?
+        # Convert evaluate output to set
+        # then compute union and convert back to sorted list
+        union = set(self.ops[0].evaluate(inverted_index))
         # if not self.operand1.is_flipped and not self.operand2.is_flipped:
         for op in self.ops:
-            union.update(op.evaluate(inverted_index))
-        # compute intersection
-        return union
+            curr_list = set(op.evaluate(inverted_index))
+            union.update(curr_list)
+
+        return len(union), sorted(list(union))
+
+    def getSize(self, inverted_index):
+        if self.size == None:
+            # Don't evaluate more than once
+            self.size, self.union = self._evaluate(inverted_index)
+        return self.size
 
     def __str__(self):
         return "∨".join([op.__str__() for op in self.ops])
@@ -61,16 +87,65 @@ class QueryAnd(Query):
     def __init__(self, ops):
         super().__init__()
         self.ops = ops
+        self.ops_size = {} # Dictionary to hold [op: size]
+        self.total_size = None
 
     def evaluate(self, inverted_index):
         if len(self.ops) == 0:
-            return set()
-        # TODO: sort ops by size, evaluate from small to large
-        sets = [set(op.evaluate(inverted_index)) for op in self.ops]
-        intersection = sets[0]
-        for i in sets:
-            intersection.intersection_update(i)
-        return intersection
+            return []
+
+        if len(self.ops_size) == 0:
+            # While computing the size, the func fills up self.ops_size dict
+            self.getSize(inverted_index)
+
+        # Sort ops by size, evaluate from small to large
+        sorted_ops = sorted(self.ops_size.items(), key=lambda x: x[1])
+        lists = [op[0].evaluate(inverted_index) for op in sorted_ops]
+        merged_list = lists[0]
+        for each_list in lists:
+            merged_list = self._mergeTwoLists(inverted_index, merged_list, each_list)
+
+        self.total_size = len(merged_list)
+        return merged_list
+
+    def _mergeTwoLists(self, invertedIndex, list1, list2):
+        list1_skips = invertedIndex.GetSkipPointers(list1)
+        list2_skips = invertedIndex.GetSkipPointers(list2)
+
+        merged_list = []
+        i = 0
+        j = 0
+        while i < len(list1) and j < len(list2):
+            if list1[i] == list2[j]:
+                merged_list.append(list1[i])
+                i += 1
+                j += 1
+            elif list1[i] < list2[j]:
+                next_i = list1_skips[i]
+                if next_i != i and list1[next_i] < list2[j]:
+                    i = next_i
+                else:
+                    i += 1
+            else:
+                next_j = list2_skips[j]
+                if next_j != j and list2[next_j] < list1[i]:
+                    j = next_j
+                else:
+                    j += 1
+
+        return merged_list
+
+    # TODO: Double check this total_size
+    def getSize(self, inverted_index):
+        for op in self.ops:
+            curr_size = op.getSize(inverted_index)
+            self.ops_size[op] = int(curr_size)
+
+        # Return self.total_size when this particular QueryAND has been evaluated and this getSize method
+        # is called by another Query obj.
+        # Otherwise, it means getSize was called by the current QueryAnd obj and we return self.total_size which evaluates
+        # to None. In this case, the total_size val is not used and we aare actually only concerned with populating self.ops_size.
+        return self.total_size
 
     def __str__(self):
         return "∧".join([op.__str__() for op in self.ops])
