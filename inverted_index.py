@@ -32,6 +32,7 @@ class InvertedIndex:
         self.in_dir = in_dir
         self.out_dict = out_dict
         self.out_postings = out_postings
+
         self.all_files = set()
         try:
             with open("document_id_list.txt") as f:
@@ -75,17 +76,18 @@ class InvertedIndex:
         all_files = []
         for doc_id in os.listdir(self.in_dir):
             all_files.append(int(doc_id))
+        all_files = sorted(all_files)
 
         postings = defaultdict(list)  # key: Term, Value: List of doc_id
         dictionary = set()  # Terms
         stem_dict = {}
 
         with open("document_id_list.txt", 'w') as f:
-            f.write(",".join([str(i) for i in sorted(all_files)]))
+            f.write(",".join([str(i) for i in all_files]))
 
         start_time = time.perf_counter()
         # Read in ascending order of their file names
-        for doc_id in sorted(all_files):
+        for doc_id in all_files:
             with open(os.path.join(self.in_dir, str(doc_id))) as file:
                 for line in file:
                     # Tokenize by sentences
