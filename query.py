@@ -64,13 +64,13 @@ class QueryOr(Query):
     def _evaluate(self, inverted_index):
         # TODO: is there a better way?
         # Convert evaluate output to set
-        # then compute intersection and convert back to sorted list
+        # then compute union and convert back to sorted list
         union = set(self.ops[0].evaluate(inverted_index))
         # if not self.operand1.is_flipped and not self.operand2.is_flipped:
         for op in self.ops:
             curr_list = set(op.evaluate(inverted_index))
             union.update(curr_list)
-        # compute intersection
+
         return len(union), sorted(list(union))
 
     def getSize(self, inverted_index):
@@ -92,7 +92,7 @@ class QueryAnd(Query):
 
     def evaluate(self, inverted_index):
         if len(self.ops) == 0:
-            return set()
+            return []
 
         if len(self.ops_size) == 0:
             # While computing the size, the func fills up self.ops_size dict
@@ -134,6 +134,7 @@ class QueryAnd(Query):
 
         return merged_list
 
+    # TODO: Double check this total_size
     def getSize(self, inverted_index):
         total_size = 0
         for op in self.ops:
