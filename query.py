@@ -139,8 +139,8 @@ class QueryAnd(Query):
         total_size = 0
         for op in self.ops:
             curr_size = op.getSize(inverted_index)
-            total_size += int(curr_size)
-            self.ops_size[op] = int(curr_size)
+            total_size += curr_size
+            self.ops_size[op] = curr_size
         return total_size
 
     def __str__(self):
@@ -265,4 +265,7 @@ class QueryParser:
             root.append(QueryAnd(current))
         elif len(current) == 1:
             root.append(current[0])
+
+        if len(root) == 1:
+            return root[0]
         return QueryOr(root)

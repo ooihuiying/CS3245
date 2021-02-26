@@ -1,4 +1,50 @@
-(10year)
-cropland
-( 10year AND cropland )
-(10mark OR 30th)
+two
+subject
+east
+north
+corpor
+good
+anoth
+studi
+yet
+call
+NOT rather
+NOT depend
+NOT nation
+NOT view
+NOT told
+NOT expir
+NOT depart
+NOT almost
+NOT tokyo
+NOT enter
+analyst AND between
+currenc AND brazil
+disput AND term
+cut AND have
+season AND comput
+septemb AND drop
+per AND determin
+tokyo AND steel
+manag AND but
+say AND averag
+soviet OR contain
+pact OR contain
+now OR if
+heavi OR until
+pay OR paid
+loan OR clear
+steel OR local
+construct OR almost
+approv OR abov
+purchas OR made
+buy OR immedi AND also AND quarterli OR 2nd AND tokyo AND heavi AND transact AND east OR brazil
+at AND co AND it AND compani OR east OR valu AND good AND central OR no OR which
+overal AND york AND outstand AND that AND import AND lend AND place OR banker OR state OR import
+definit OR qtr OR potenti OR step OR mark AND higher AND too AND foreign AND discontinu OR some
+price AND corpor OR encourag AND sharpli AND wheat OR combin OR depart OR those OR white AND stock
+polit OR loss OR undisclos OR new OR low OR prefer OR total OR economi AND close OR trader
+form OR lt AND declar OR septemb OR minist AND a OR share OR earlier OR origin OR revis
+jame OR abl OR among AND slow AND white AND sugar OR just AND commit OR could OR greater
+chang OR cost OR back AND unchang AND cent OR again OR consum AND initi AND meet AND june
+asset OR tax OR determin OR field AND america OR usda OR confid AND just OR york OR march

@@ -203,6 +203,7 @@ class InvertedIndex:
                 q.put(QueueItem(line, block_num))
                 lines_per_block_mem[block_num] += 1
 
+        freq_dict = {}
         # K_WAY
         while not q.empty():
 
@@ -220,6 +221,7 @@ class InvertedIndex:
                 content = term_to_write + " " + " ".join(doc_ids_to_write) + "\n"
                 result_doc_ids_to_write.append(content)
                 result_term_to_write.append(term_to_write + " " + str(len(doc_ids_to_write)) + " " + str(posting_file_line_offset) + "\n") # Term Size Offset
+                freq_dict[term_to_write] = len(doc_ids_to_write)
                 posting_file_line_offset += len(content) + 1
 
                 # Complete posting list of prev term, hence increment to indicate new line in posting.txt
@@ -261,6 +263,7 @@ class InvertedIndex:
         # Write result in mem to file
         self.WriteToFile(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
         self.WriteToFile(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
+        self.WriteToFile("freq_sorted_dict.txt", ["{} {}\n".format(item[0], item[1]) for item in sorted(list(freq_dict.items()), key=lambda i: i[1], reverse=True)])
 
 
     def WriteToFile(self, out_file, result, append = False, fw = None):
@@ -322,7 +325,7 @@ class InvertedIndex:
     def GetSizeForTerm(self, term):
         try:
             size_of_posting_list, offset = self.dictionary[term]
-            return size_of_posting_list
+            return int(size_of_posting_list)
         except:
             return 0
 
