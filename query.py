@@ -100,11 +100,9 @@ class QueryAnd(Query):
         # Sort by evaluated op size
         sorted_evaluated_op_list = sorted(evaluated_op_list, key=lambda x: x[1])
 
-        sorted_lists = []
-        for list in sorted_evaluated_op_list:
-            # Only want to keep the evaluated operation list results
-            # Discard op.getSize() value
-            sorted_lists.append(list[0])
+        # Only want to keep the evaluated operation list results
+        # Discard op.getSize() value
+        sorted_lists = [eval_op[0] for eval_op in sorted_evaluated_op_list]
 
         merged_list = sorted_lists[0]
         for each_list in sorted_lists:
