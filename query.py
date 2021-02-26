@@ -53,32 +53,22 @@ class QueryOr(Query):
     def __init__(self, ops):
         super().__init__()
         self.ops = ops
-        self.union = None
         self.size = None
 
     def evaluate(self, inverted_index):
-        if self.union == None:
-            # Don't evaluate more than once
-            self.size, self.union = self._evaluate(inverted_index)
-
-        return self.union
-
-    def _evaluate(self, inverted_index):
-        # TODO: is there a better way?
-        # Convert evaluate output to set
-        # then compute union and convert back to sorted list
         union = set(self.ops[0].evaluate(inverted_index))
         # if not self.operand1.is_flipped and not self.operand2.is_flipped:
         for op in self.ops:
             curr_list = set(op.evaluate(inverted_index))
             union.update(curr_list)
 
-        return len(union), sorted(list(union))
+        union = sorted(list(union))
+        self.size = len(union)
 
+        return union
+
+    # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
     def getSize(self, inverted_index):
-        if self.size == None:
-            # Don't evaluate more than once
-            self.size, self.union = self._evaluate(inverted_index)
         return self.size
 
     def __str__(self):
@@ -89,46 +79,34 @@ class QueryAnd(Query):
     def __init__(self, ops):
         super().__init__()
         self.ops = ops
-        self.ops_size = {} # Dictionary to hold [op: size]
         self.total_size = None
         self.merged_list = None
 
     def evaluate(self, inverted_index):
-        if self.ops == None:
+        if len(self.ops) == 0:
             return []
 
-        if len(self.ops_size) == 0:
-            # While computing the size, the func fills up self.ops_size dict
-            self.getSize(inverted_index)
+        # Evaluate op first then call getSize()
+        evaluated_op_list = [(op.evaluate(inverted_index), op.getSize(inverted_index)) for op in self.ops]
+        # Sort by evaluated op size
+        sorted_evaluated_op_list = sorted(evaluated_op_list, key=lambda x: x[1])
 
-        if self.merged_list == None:
-            # Only evaluate once
-            self.total_size, self.merged_list = self._evaluate(inverted_index)
+        sorted_lists = []
+        for list in sorted_evaluated_op_list:
+            # Only want to keep the evaluated operation list results
+            # Discard op.getSize() value
+            sorted_lists.append(list[0])
 
-        return self.merged_list
-
-    def _evaluate(self, inverted_index):
-        # Sort ops by size, evaluate from small to large
-        sorted_ops = sorted(self.ops_size.items(), key=lambda x: x[1])
-
-        """
-        # Uncomment to check size
-        for op in sorted_ops:
-            try:
-                print(op[0].__str__())
-            except:
-                print(op)
-            print(op[1])
-        """
-
-        lists = [op[0].evaluate(inverted_index) for op in sorted_ops]
-        merged_list = lists[0]
-        for each_list in lists:
+        merged_list = sorted_lists[0]
+        for each_list in sorted_lists:
             merged_list = self._mergeTwoLists(inverted_index, merged_list, each_list)
 
-        return len(merged_list), merged_list
+        self.total_size = len(merged_list)
+
+        return merged_list
 
     def _mergeTwoLists(self, invertedIndex, list1, list2):
+
         list1_skips = invertedIndex.GetSkipPointers(list1)
         list2_skips = invertedIndex.GetSkipPointers(list2)
 
@@ -155,17 +133,8 @@ class QueryAnd(Query):
 
         return merged_list
 
-    # TODO: Double check this total_size
-    # Return self.total_size when this particular QueryAND has been evaluated and this getSize method
-    # is called by another Query obj.
-    # Otherwise, it means getSize is called by the current QueryAnd obj and we want to find out the size of all
-    # its' op. We need to make sure that all the op has been evaluated first before getting its' size.
     # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
     def getSize(self, inverted_index):
-        for op in self.ops:
-            op.evaluate(inverted_index) # Need to get size of ops but before this, we want to make sure it has been evaluated before
-            curr_size = op.getSize(inverted_index)
-            self.ops_size[op] = int(curr_size)
         return self.total_size
 
     def __str__(self):
