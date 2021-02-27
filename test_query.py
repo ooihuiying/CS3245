@@ -97,6 +97,58 @@ def TestNotQueries(inverted_index_class):
     posting_list = query.evaluate(inverted_index_class)
     assert posting_list == [3]
 
+    # Single And Not
+    query = QueryParser.parse("a AND NOT z")
+    assert query.__str__() == 'a∧¬z'
+    posting_list = query.evaluate(inverted_index_class)
+    assert len(posting_list) == 0
+
+    # Longer And Not
+    query = QueryParser.parse("(y AND z) AND NOT (a OR r)")
+    assert query.__str__() == 'y∧z∧¬a∨r'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [2]
+
+    # And Not with Term and with Query
+    query = QueryParser.parse("(y AND NOT z) AND NOT (a OR r)")
+    assert query.__str__() == 'y∧¬z∧¬a∨r'
+    posting_list = query.evaluate(inverted_index_class)
+    assert len(posting_list) == 0
+
+    query = QueryParser.parse("(y AND NOT a) AND NOT (b)")
+    assert query.__str__() == 'y∧¬a∧¬b'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [1, 2]
+
+    query = QueryParser.parse("NOT (y AND NOT a) AND NOT (r)")
+    assert query.__str__() == '¬y∧¬a∧¬r'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [0, 3]
+
+    # Not in front of And Not
+    # TODO: Double check the expected result for this
+    query = QueryParser.parse("NOT s AND NOT a")
+    assert query.__str__() == '¬s∧¬a'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [2, 3]
+
+    query = QueryParser.parse("NOT (s AND NOT a)")
+    assert query.__str__() == '¬s∧¬a'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [0, 2, 3]
+
+    # And Not in front of Not
+    query = QueryParser.parse("z AND NOT NOT bb")
+    assert query.__str__() == 'z∧¬¬bb'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [2]
+
+    # NOT VALID QUERY BELOW
+    # query = QueryParser.parse("a NOT AND NOT z")
+    # assert query.__str__() == 'a¬∧¬z'
+    # posting_list = query.evaluate(inverted_index_class)
+    # assert len(posting_list) == 0
+
 def TestMixQueries(inverted_index_class):
 
     query = QueryParser.parse("(a OR r) AND (r AND z)")

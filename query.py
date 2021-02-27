@@ -64,7 +64,6 @@ class QueryOr(Query):
 
         union = sorted(list(union))
         self.size = len(union)
-
         return union
 
     # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
@@ -88,21 +87,12 @@ class QueryAnd(Query):
 
         # Evaluate op first then call getSize()
         evaluated_op_list = [(op.evaluate(inverted_index), op.getSize(inverted_index)) for op in self.ops]
-
-        """
-        # Uncomment to view size
-        print("++++++++++++++")
-        for op in self.ops:
-            print(op.__str__())
-            print(op.getSize(inverted_index))
-        """
-
         # Sort by evaluated op size
         sorted_evaluated_op_list = sorted(evaluated_op_list, key=lambda x: x[1])
 
         # Only want to keep the evaluated operation list results
         # Discard op.getSize() value
-        sorted_lists = [eval_op[0] for eval_op in sorted_evaluated_op_list]
+        sorted_lists = [op[0] for op in sorted_evaluated_op_list]
 
         merged_list = sorted_lists[0]
         for each_list in sorted_lists:
@@ -112,10 +102,10 @@ class QueryAnd(Query):
 
         return merged_list
 
-    def _mergeTwoLists(self, invertedIndex, list1, list2):
+    def _mergeTwoLists(self, inverted_index, list1, list2):
 
-        list1_skips = invertedIndex.GetSkipPointers(list1)
-        list2_skips = invertedIndex.GetSkipPointers(list2)
+        list1_skips = inverted_index.GetSkipPointers(list1)
+        list2_skips = inverted_index.GetSkipPointers(list2)
 
         merged_list = []
         i = 0
@@ -147,12 +137,66 @@ class QueryAnd(Query):
     def __str__(self):
         return "∧".join([op.__str__() for op in self.ops])
 
+class QueryAndNot(Query):
+    def __init__(self, operand1, operand2):
+        super().__init__()
+        self.operand1 = operand1
+        self.operand2 = operand2
+        self.total_size = None
+        self.merged_list = None
+
+    def evaluate(self, inverted_index):
+        if self.operand1 == None or self.operand2 == None:
+            return []
+
+        op1_list = self.operand1.evaluate(inverted_index)
+        op2_list = self.operand2.evaluate(inverted_index)
+
+        merged_list = sorted(set(op1_list).difference(set(op2_list)))
+        self.total_size = len(merged_list)
+
+        return merged_list
+
+    def _mergeTwoLists(self, inverted_index, list1, list2):
+
+        list1_skips = inverted_index.GetSkipPointers(list1)
+        list2_skips = inverted_index.GetSkipPointers(list2)
+
+        merged_list = []
+        i = 0
+        j = 0
+        while i < len(list1) and j < len(list2):
+            if list1[i] != list2[j]:
+                merged_list.append(list1[i])
+
+            if list1[i] < list2[j]:
+                next_i = list1_skips[i]
+                if next_i != i and list1[next_i] < list2[j]:
+                    i = next_i
+                else:
+                    i += 1
+            else:
+                next_j = list2_skips[j]
+                if next_j != j and list2[next_j] < list1[i]:
+                    j = next_j
+                else:
+                    j += 1
+
+        return merged_list
+
+    # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
+    def getSize(self, inverted_index):
+        return self.total_size
+
+    def __str__(self):
+        return "{}∧¬{}".format(self.operand1, self.operand2)
 
 class QueryNot(Query):
     def __init__(self, op1:Query):
         super().__init__()
         self.operand1 = op1
         self.is_flipped = not op1.is_flipped
+        self.size = None
         # new_op = op1.copy()
         # new_op.is_flipped = not new_op.is_flipped
         # return new_op
@@ -160,17 +204,19 @@ class QueryNot(Query):
     def evaluate(self, inverted_index:InvertedIndex):
         # TODO remove temporary naive implementation
         matches = self.operand1.evaluate(inverted_index)
-        return sorted(list(inverted_index.all_files.difference(matches)))
+        diff = sorted(list(inverted_index.all_files.difference(matches)))
+        self.size = sorted(list(inverted_index.all_files.difference(matches)))
+        return diff
 
     def getSize(self, inverted_index):
-        return self.operand1.getSize(inverted_index)
+        return self.size
 
     def __str__(self):
-        return "¬" \
-               "{}".format(self.operand1)
+        return "¬{}".format(self.operand1)
 
 
 class Token:
+    AND_NOT = 0
     AND = 1
     OR = 2
     NOT = 3
@@ -190,7 +236,12 @@ class QueryParser:
             elif chunk == "OR":
                 tokens.append(Token.OR)
             elif chunk == "NOT":
-                tokens.append(Token.NOT)
+                # Check if it is following AND
+                if len(tokens)>0 and tokens[-1] == Token.AND:
+                    tokens.pop() # Remove previous AND
+                    tokens.append(Token.AND_NOT)
+                else:
+                    tokens.append(Token.NOT)
             elif chunk[0] == "(":
                 tokens.append(Token.LB)
                 rb = chunk.find(")")
@@ -224,6 +275,8 @@ class QueryParser:
             return QueryAnd
         elif op_token == Token.OR:
             return QueryOr
+        elif op_token == Token.AND_NOT:
+            return QueryAndNot
         else:
             raise ValueError("No such op")
 
@@ -240,9 +293,16 @@ class QueryParser:
         for token in tokens:
             if in_bracket and token == Token.RB:
                 subquery = cls._parse(bracket_current)
+
                 if negate_next:
                     subquery = QueryNot(subquery)
                     negate_next = False
+
+                if current_op == Token.AND_NOT:
+                    prev = current.pop()
+                    subquery = QueryAndNot(prev, subquery)
+                    current_op = Token.AND
+
                 current.append(subquery) # TODO fix this
                 bracket_current = []
                 in_bracket = False
@@ -261,12 +321,21 @@ class QueryParser:
                 current_op = Token.OR
             elif token == Token.NOT:
                 negate_next = not negate_next
+            elif token == Token.AND_NOT:
+                current_op = Token.AND_NOT
             else:  # query term
                 query = QueryTerm(token)
                 if negate_next:
                     query = QueryNot(query)
                     negate_next = False
+
+                if current_op == Token.AND_NOT:
+                    prev = current.pop()
+                    query = QueryAndNot(prev, query)
+                    current_op = Token.AND
+
                 current.append(query)
+
 
         if len(current) > 1:
             root.append(QueryAnd(current))
