@@ -17,163 +17,163 @@ def usage():
 
 def TestSingleQuery(inverted_index_class):
 
-    query = QueryParser.parse("a")
+    query = QueryParser.Parse("a")
     assert query.__str__() == 'a'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0]
 
-    query = QueryParser.parse("(a)")
+    query = QueryParser.Parse("(a)")
     assert query.__str__() == 'a'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0]
 
 def TestAndQueries(inverted_index_class):
 
     # Single AND
-    query = QueryParser.parse("a AND b")
+    query = QueryParser.Parse("a AND b")
     assert query.__str__() == 'a∧b'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0]
 
     # Test Stemming of query
-    query = QueryParser.parse("(A AND r)")
+    query = QueryParser.Parse("(A AND r)")
     assert query.__str__() == 'a∧r'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert len(posting_list) == 0
 
     # Test longer AND query
-    query = QueryParser.parse("(a AND c) AND (x AND y)")
+    query = QueryParser.Parse("(a AND c) AND (x AND y)")
     assert query.__str__() == 'a∧c∧x∧y'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0]
 
     # Test longer AND query
-    query = QueryParser.parse("(x AND y) AND (v AND z) AND (u AND z)")
+    query = QueryParser.Parse("(x AND y) AND (v AND z) AND (u AND z)")
     assert query.__str__() == 'x∧y∧v∧z∧u∧z'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 1]
 
     # Test query for non-existing terms
-    query = QueryParser.parse("(abc AND r)")
+    query = QueryParser.Parse("(abc AND r)")
     assert query.__str__() == 'abc∧r'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert len(posting_list) == 0
 
 def TestOrQueries(inverted_index_class):
     # Single OR
-    query = QueryParser.parse("a OR z")
+    query = QueryParser.Parse("a OR z")
     assert query.__str__() == 'a∨z'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 1, 2]
 
     # Test Stemming of query
-    query = QueryParser.parse("(A OR r)")
+    query = QueryParser.Parse("(A OR r)")
     assert query.__str__() == 'a∨r'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 1]
 
     # Test longer OR query
-    query = QueryParser.parse("(a OR b) OR (r OR a)")
+    query = QueryParser.Parse("(a OR b) OR (r OR a)")
     assert query.__str__() == 'a∨b∨r∨a'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 1]
 
     # Test longer OR query
-    query = QueryParser.parse("(a OR b) OR (r OR a) OR (b OR z)")
+    query = QueryParser.Parse("(a OR b) OR (r OR a) OR (b OR z)")
     assert query.__str__() == 'a∨b∨r∨a∨b∨z'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 1, 2]
 
     # Test query for non-existing terms
-    query = QueryParser.parse("(abc OR r)")
+    query = QueryParser.Parse("(abc OR r)")
     assert query.__str__() == 'abc∨r'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [1]
 
 def TestNotQueries(inverted_index_class):
     # Single NOT
-    query = QueryParser.parse("NOT z")
+    query = QueryParser.Parse("NOT z")
     assert query.__str__() == '¬z'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [3]
 
     # Single And Not
-    query = QueryParser.parse("a AND NOT z")
+    query = QueryParser.Parse("a AND NOT z")
     assert query.__str__() == 'a∧¬z'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert len(posting_list) == 0
 
     # Longer And Not
-    query = QueryParser.parse("(y AND z) AND NOT (a OR r)")
+    query = QueryParser.Parse("(y AND z) AND NOT (a OR r)")
     assert query.__str__() == 'y∧z∧¬a∨r'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [2]
 
     # And Not with Term and with Query
-    query = QueryParser.parse("(y AND NOT z) AND NOT (a OR r)")
+    query = QueryParser.Parse("(y AND NOT z) AND NOT (a OR r)")
     assert query.__str__() == 'y∧¬z∧¬a∨r'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert len(posting_list) == 0
 
-    query = QueryParser.parse("(y AND NOT a) AND NOT (b)")
+    query = QueryParser.Parse("(y AND NOT a) AND NOT (b)")
     assert query.__str__() == 'y∧¬a∧¬b'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [1, 2]
 
-    query = QueryParser.parse("NOT (y AND NOT a) AND NOT (r)")
+    query = QueryParser.Parse("NOT (y AND NOT a) AND NOT (r)")
     assert query.__str__() == '¬y∧¬a∧¬r'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 3]
 
     # Not in front of And Not
     # TODO: Double check the expected result for this
-    query = QueryParser.parse("NOT s AND NOT a")
+    query = QueryParser.Parse("NOT s AND NOT a")
     assert query.__str__() == '¬s∧¬a'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [2, 3]
 
-    query = QueryParser.parse("NOT (s AND NOT a)")
+    query = QueryParser.Parse("NOT (s AND NOT a)")
     assert query.__str__() == '¬s∧¬a'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 2, 3]
 
     # And Not in front of Not
-    query = QueryParser.parse("z AND NOT NOT bb")
+    query = QueryParser.Parse("z AND NOT NOT bb")
     assert query.__str__() == 'z∧¬¬bb'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [2]
 
     # NOT VALID QUERY BELOW
-    # query = QueryParser.parse("a NOT AND NOT z")
+    # query = QueryParser.Parse("a NOT AND NOT z")
     # assert query.__str__() == 'a¬∧¬z'
-    # posting_list = query.evaluate(inverted_index_class)
+    # posting_list = query.Evaluate(inverted_index_class)
     # assert len(posting_list) == 0
 
 def TestMixQueries(inverted_index_class):
 
-    query = QueryParser.parse("(a OR r) AND (r AND z)")
+    query = QueryParser.Parse("(a OR r) AND (r AND z)")
     assert query.__str__() == 'a∨r∧r∧z'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [1]
 
-    query = QueryParser.parse("(a AND r) OR (p AND q) OR (n AND x)")
+    query = QueryParser.Parse("(a AND r) OR (p AND q) OR (n AND x)")
     assert query.__str__() == 'a∧r∨p∧q∨n∧x'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0,1]
 
-    query = QueryParser.parse("(a) OR (aa AND z) AND (n AND x)")
+    query = QueryParser.Parse("(a) OR (aa AND z) AND (n AND x)")
     assert query.__str__() == 'a∨aa∧z∧n∧x'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0]
 
-    query = QueryParser.parse("(a) OR (aa AND x) AND (bb AND y)")
+    query = QueryParser.Parse("(a) OR (aa AND x) AND (bb AND y)")
     assert query.__str__() == 'a∨aa∧x∧bb∧y'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 2]
 
-    query = QueryParser.parse("aa AND dd AND ee OR b")
+    query = QueryParser.Parse("aa AND dd AND ee OR b")
     assert query.__str__() == 'aa∧dd∧ee∨b'
-    posting_list = query.evaluate(inverted_index_class)
+    posting_list = query.Evaluate(inverted_index_class)
     assert posting_list == [0, 3]
 
 def run_test(dict_file, postings_file):

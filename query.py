@@ -7,25 +7,22 @@ from inverted_index import InvertedIndex
 stemmer = nltk.PorterStemmer()
 translator = str.maketrans('', '', string.punctuation)
 
-# TODO: Add NOT functionality
-# TODO: Optimise queries (skip pointers, size of postings, AND NOT) - done skip pointers and size of posting
-# TODO: Create test data set to check correctness - partially done...
+# TODO: Add NOT functionality - done, to check
+# TODO: Optimise queries (skip pointers, size of postings, AND NOT) - done, to check
+# TODO: Create test data set to check correctness - done, to check...
 
 class Query:
     def __init__(self):
         self.is_flipped = False
         pass
 
-    def toDNF(self):
-        return Query()
-
-    def evaluate(self, inverted_index):
+    def Evaluate(self, inverted_index):
         """
         Return a list of documents that satisfies the query
         """
         raise NotImplementedError("evaluate not implemented")
 
-    def getSize(self, inverted_index):
+    def GetSize(self, inverted_index):
         raise NotImplementedError("getSize not implemented")
 
     def __str__(self):
@@ -37,12 +34,12 @@ class QueryTerm(Query):
         super().__init__()
         self.term = stemmer.stem(term.strip().translate(translator).lower())
 
-    def evaluate(self, inverted_index):
+    def Evaluate(self, inverted_index):
         # TODO maybe make this an iterator
         docs = inverted_index.GetPostingListForTerm(self.term)
         return docs
 
-    def getSize(self, inverted_index):
+    def GetSize(self, inverted_index):
         return inverted_index.GetSizeForTerm(self.term)
 
     def __str__(self):
@@ -55,11 +52,10 @@ class QueryOr(Query):
         self.ops = ops
         self.size = None
 
-    def evaluate(self, inverted_index):
-        union = set(self.ops[0].evaluate(inverted_index))
-        # if not self.operand1.is_flipped and not self.operand2.is_flipped:
+    def Evaluate(self, inverted_index):
+        union = set(self.ops[0].Evaluate(inverted_index))
         for op in self.ops:
-            curr_list = set(op.evaluate(inverted_index))
+            curr_list = set(op.Evaluate(inverted_index))
             union.update(curr_list)
 
         union = sorted(list(union))
@@ -67,7 +63,7 @@ class QueryOr(Query):
         return union
 
     # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
-    def getSize(self, inverted_index):
+    def GetSize(self, inverted_index):
         return self.size
 
     def __str__(self):
@@ -81,12 +77,12 @@ class QueryAnd(Query):
         self.total_size = None
         self.merged_list = None
 
-    def evaluate(self, inverted_index):
+    def Evaluate(self, inverted_index):
         if len(self.ops) == 0:
             return []
 
         # Evaluate op first then call getSize()
-        evaluated_op_list = [(op.evaluate(inverted_index), op.getSize(inverted_index)) for op in self.ops]
+        evaluated_op_list = [(op.Evaluate(inverted_index), op.GetSize(inverted_index)) for op in self.ops]
         # Sort by evaluated op size
         sorted_evaluated_op_list = sorted(evaluated_op_list, key=lambda x: x[1])
 
@@ -96,13 +92,13 @@ class QueryAnd(Query):
 
         merged_list = sorted_lists[0]
         for each_list in sorted_lists:
-            merged_list = self._mergeTwoLists(inverted_index, merged_list, each_list)
+            merged_list = self.MergeTwoLists(inverted_index, merged_list, each_list)
 
         self.total_size = len(merged_list)
 
         return merged_list
 
-    def _mergeTwoLists(self, inverted_index, list1, list2):
+    def MergeTwoLists(self, inverted_index, list1, list2):
 
         list1_skips = inverted_index.GetSkipPointers(list1)
         list2_skips = inverted_index.GetSkipPointers(list2)
@@ -131,7 +127,7 @@ class QueryAnd(Query):
         return merged_list
 
     # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
-    def getSize(self, inverted_index):
+    def GetSize(self, inverted_index):
         return self.total_size
 
     def __str__(self):
@@ -145,47 +141,20 @@ class QueryAndNot(Query):
         self.total_size = None
         self.merged_list = None
 
-    def evaluate(self, inverted_index):
-        if self.operand1 == None or self.operand2 == None:
+    def Evaluate(self, inverted_index):
+        if not self.operand1 or not self.operand2:
             return []
 
-        op1_list = self.operand1.evaluate(inverted_index)
-        op2_list = self.operand2.evaluate(inverted_index)
+        op1_list = self.operand1.Evaluate(inverted_index)
+        op2_list = self.operand2.Evaluate(inverted_index)
 
         merged_list = sorted(set(op1_list).difference(set(op2_list)))
         self.total_size = len(merged_list)
 
         return merged_list
 
-    def _mergeTwoLists(self, inverted_index, list1, list2):
-
-        list1_skips = inverted_index.GetSkipPointers(list1)
-        list2_skips = inverted_index.GetSkipPointers(list2)
-
-        merged_list = []
-        i = 0
-        j = 0
-        while i < len(list1) and j < len(list2):
-            if list1[i] != list2[j]:
-                merged_list.append(list1[i])
-
-            if list1[i] < list2[j]:
-                next_i = list1_skips[i]
-                if next_i != i and list1[next_i] < list2[j]:
-                    i = next_i
-                else:
-                    i += 1
-            else:
-                next_j = list2_skips[j]
-                if next_j != j and list2[next_j] < list1[i]:
-                    j = next_j
-                else:
-                    j += 1
-
-        return merged_list
-
     # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
-    def getSize(self, inverted_index):
+    def GetSize(self, inverted_index):
         return self.total_size
 
     def __str__(self):
@@ -201,14 +170,14 @@ class QueryNot(Query):
         # new_op.is_flipped = not new_op.is_flipped
         # return new_op
 
-    def evaluate(self, inverted_index:InvertedIndex):
+    def Evaluate(self, inverted_index:InvertedIndex):
         # TODO remove temporary naive implementation
-        matches = self.operand1.evaluate(inverted_index)
+        matches = self.operand1.Evaluate(inverted_index)
         diff = sorted(list(inverted_index.all_files.difference(matches)))
-        self.size = sorted(list(inverted_index.all_files.difference(matches)))
+        self.size = len(diff)
         return diff
 
-    def getSize(self, inverted_index):
+    def GetSize(self, inverted_index):
         return self.size
 
     def __str__(self):
@@ -225,7 +194,7 @@ class Token:
 
 class QueryParser:
     @classmethod
-    def tokenize(cls, query_string: str):
+    def Tokenize(cls, query_string: str):
         tokens = []
         for chunk in query_string.split(" "):
             chunk = chunk.strip()
@@ -263,8 +232,8 @@ class QueryParser:
 
     # Z AND A OR (B AND C) OR (D OR E)
     @classmethod
-    def parse(cls, query_string: str):
-        tokens = cls.tokenize(query_string)
+    def Parse(cls, query_string: str):
+        tokens = cls.Tokenize(query_string)
         return cls._parse(tokens)
 
     @classmethod

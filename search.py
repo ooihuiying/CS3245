@@ -32,10 +32,6 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     # This is an empty method
     # Pls implement your code in below
 
-
-    ############################################
-    # Example code below to demonstrate how search.py may use InvertedIndex class to retrieve posting lists for term etc.....
-
     inverted_index_class = InvertedIndex(out_dict=dict_file, out_postings=postings_file)
 
     start_time = time.perf_counter()
@@ -43,58 +39,12 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     with open(queries_file, 'r') as f:
         for query in f:
             n += 1
-            query = QueryParser.parse(query)
+            query = QueryParser.Parse(query)
             print(query.__str__())
-            posting_list = query.evaluate(inverted_index_class)
+            posting_list = query.Evaluate(inverted_index_class)
             print("Query #{}: {} --> {} results".format(n, query, len(posting_list)))
-            # print(" ".join([str(int) for int in posting_list]) + "\n")
 
     print("{} queries completed in {:.2f}s".format(n, time.perf_counter() - start_time))
-
-    # Get the corresponding posting List for Term -> "brake"
-    # query = "brake"
-    # size, posting_list = inverted_index_class.GetPostingListForTerm(query)
-    # for p in posting_list:
-    #     print(p, end = " ")
-    # print("\n")
-
-    # AND
-    # term1 AND term2
-    # OR
-    # term1 OR term2
-
-    # NOT
-    # NOT term1
-
-    # NOT term1 AND term2
-    # NOT term1 AND NOT term2
-
-    # NOT term1 OR  term2
-    # NOT term1 OR NOT term2
-
-    # term1 AND (term2 OR term3)
-    # (term1 AND term2) OR term3
-
-    # NOT term1 AND (term2 OR term3)
-    # term1 AND (NOT term2 OR term3)
-    # NOT (term1 AND term2) OR term3
-
-    # (term1 AND term2) OR term3
-
-    # A OR B OR (C AND D) OR
-    # A + B + CD + ...
-
-    # A AND B AND C AND (D OR E)
-    # A AND B AND C AND D OR A AND B AND C AND E
-    # ABCD + ABCE # DNF (this one better)
-    # ABC (D + E) # CNF
-
-    # Obtain the skip list for current postingList
-    # skip_list = inverted_index_class.GetSkipPointers(posting_list)
-    # for s in skip_list:
-    #     print(s, end = " ")
-
-    ############################################
 
 dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 
