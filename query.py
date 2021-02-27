@@ -146,7 +146,7 @@ class QueryAndNot(Query):
         op1_list = self.operand1.Evaluate(inverted_index)
         op2_list = self.operand2.Evaluate(inverted_index)
 
-        merged_list = sorted(set(op1_list).difference(set(op2_list)))
+        merged_list = sorted(list(set(op1_list).difference(set(op2_list))))
         self.size = len(merged_list)
 
         return merged_list
