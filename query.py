@@ -74,8 +74,7 @@ class QueryAnd(Query):
     def __init__(self, ops):
         super().__init__()
         self.ops = ops
-        self.total_size = None
-        self.merged_list = None
+        self.size = None
 
     def Evaluate(self, inverted_index):
         if len(self.ops) == 0:
@@ -94,7 +93,7 @@ class QueryAnd(Query):
         for each_list in sorted_lists:
             merged_list = self.MergeTwoLists(inverted_index, merged_list, each_list)
 
-        self.total_size = len(merged_list)
+        self.size = len(merged_list)
 
         return merged_list
 
@@ -128,7 +127,7 @@ class QueryAnd(Query):
 
     # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
     def GetSize(self, inverted_index):
-        return self.total_size
+        return self.size
 
     def __str__(self):
         return "∧".join([op.__str__() for op in self.ops])
@@ -138,8 +137,7 @@ class QueryAndNot(Query):
         super().__init__()
         self.operand1 = operand1
         self.operand2 = operand2
-        self.total_size = None
-        self.merged_list = None
+        self.size = None
 
     def Evaluate(self, inverted_index):
         if not self.operand1 or not self.operand2:
@@ -149,13 +147,13 @@ class QueryAndNot(Query):
         op2_list = self.operand2.Evaluate(inverted_index)
 
         merged_list = sorted(set(op1_list).difference(set(op2_list)))
-        self.total_size = len(merged_list)
+        self.size = len(merged_list)
 
         return merged_list
 
     # Note: self.total_size of a Query obj can only be called after it's evaluate() has been called.
     def GetSize(self, inverted_index):
-        return self.total_size
+        return self.size
 
     def __str__(self):
         return "{}∧¬{}".format(self.operand1, self.operand2)
