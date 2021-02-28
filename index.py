@@ -24,7 +24,7 @@ def build_index(in_dir, out_dict, out_postings):
 
     start_time = time.perf_counter()
     inverted_index_class = InvertedIndex(in_dir, out_dict, out_postings)
-    inverted_index_class.ConstructIndex()
+    inverted_index_class.construct_index()
     end_time = time.perf_counter()
     print("Indexed in {:.2f}s".format(end_time-start_time))
 

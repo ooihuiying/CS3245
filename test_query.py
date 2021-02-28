@@ -92,11 +92,55 @@ def TestOrQueries(inverted_index_class):
 
 def TestNotQueries(inverted_index_class):
     # Single NOT
-    # query = QueryParser.parse("NOT z")
-    # assert query.__str__() == '¬z'
-    # posting_list = query.evaluate(inverted_index_class)
-    # print(posting_list)
-    # assert len(posting_list) == 0
+    query = QueryParser.parse("NOT z")
+    assert query.__str__() == '¬z'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [3]
+
+    # Single And Not
+    query = QueryParser.parse("a AND NOT z")
+    assert query.__str__() == 'a∧¬z'
+    posting_list = query.evaluate(inverted_index_class)
+    assert len(posting_list) == 0
+
+    # Longer And Not
+    query = QueryParser.parse("(y AND z) AND NOT (a OR r)")
+    assert query.__str__() == 'y∧z∧¬a∨r'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [2]
+
+    # And Not with Term and with Query
+    query = QueryParser.parse("(y AND NOT z) AND NOT (a OR r)")
+    assert query.__str__() == 'y∧¬z∧¬a∨r'
+    posting_list = query.evaluate(inverted_index_class)
+    assert len(posting_list) == 0
+
+    query = QueryParser.parse("(y AND NOT a) AND NOT (b)")
+    assert query.__str__() == 'y∧¬a∧¬b'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [1, 2]
+
+    query = QueryParser.parse("NOT (y AND NOT a) AND NOT (r)")
+    assert query.__str__() == '¬y∧¬a∧¬r'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [0, 3]
+
+    # Not in front of And Not
+    query = QueryParser.parse("NOT s AND NOT a")
+    assert query.__str__() == '¬s∧¬a'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [2, 3]
+
+    query = QueryParser.parse("NOT (s AND NOT a)")
+    assert query.__str__() == '¬s∧¬a'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [0, 2, 3]
+
+    # And Not in front of Not
+    query = QueryParser.parse("z AND NOT NOT bb")
+    assert query.__str__() == 'z∧¬¬bb'
+    posting_list = query.evaluate(inverted_index_class)
+    assert posting_list == [2]
     return False
 
 def TestMixQueries(inverted_index_class):
@@ -134,7 +178,7 @@ def run_test(dict_file, postings_file):
     print('Running test...')
     # Create index
     inverted_index_class = InvertedIndex("Tests", dict_file, postings_file)
-    inverted_index_class.ConstructIndex()
+    inverted_index_class.construct_index()
 
     # Query index
     inverted_index_class_done = InvertedIndex("", dict_file, postings_file)
