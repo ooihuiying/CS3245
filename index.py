@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import sys
 import getopt
+import time
 
 from inverted_index import InvertedIndex
 
@@ -21,8 +22,11 @@ def build_index(in_dir, out_dict, out_postings):
     # This is an empty method
     # Pls implement your code in below
 
+    start_time = time.perf_counter()
     inverted_index_class = InvertedIndex(in_dir, out_dict, out_postings)
     inverted_index_class.ConstructIndex()
+    end_time = time.perf_counter()
+    print("Indexed in {:.2f}s".format(end_time-start_time))
 
 
 

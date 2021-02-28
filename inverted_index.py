@@ -1,6 +1,8 @@
 import os
 import shutil
 import string
+import time
+
 from queue_item import QueueItem
 from queue import PriorityQueue
 from math import sqrt
@@ -30,6 +32,15 @@ class InvertedIndex:
         self.in_dir = in_dir
         self.out_dict = out_dict
         self.out_postings = out_postings
+        self.all_files = set()
+        try:
+            with open("document_id_list.txt") as f:
+                for line in f.readlines():
+                    self.all_files.update([int(i) for i in line.split(",")])
+        except FileNotFoundError:
+            print("Doc id list not created")
+
+
 
         # self.dictionary set is a dictionary where the key is the term name
         # and the value is a tuple of (size of posting list, offset from top line of posting.txt)
@@ -67,40 +78,52 @@ class InvertedIndex:
 
         postings = defaultdict(list)  # key: Term, Value: List of doc_id
         dictionary = set()  # Terms
+        stem_dict = {}
 
+        with open("document_id_list.txt", 'w') as f:
+            f.write(",".join([str(i) for i in sorted(all_files)]))
+
+        start_time = time.perf_counter()
         # Read in ascending order of their file names
         for doc_id in sorted(all_files):
-            for line in self.ReadFromFile(self.in_dir + "/" + str(doc_id)):
-                # Tokenize by sentences
-                for s_token in sent_tokenize(line):
-                    # Tokenize by word
-                    for w_token in word_tokenize(s_token):
+            with open(os.path.join(self.in_dir, str(doc_id))) as file:
+                for line in file:
+                    # Tokenize by sentences
+                    for s_token in sent_tokenize(line):
+                        # Tokenize by word
+                        for w_token in word_tokenize(s_token):
 
-                        # Remove Punctuation
-                        w_token = w_token.translate(translator)
+                            # Remove Punctuation & Case-Folding
+                            w_token = w_token.translate(translator).lower()
 
-                        # Word Stemming & Case-Folding
-                        term = stemmer.stem(w_token).lower()
+                            # Word Stemming
+                            if w_token in stem_dict:
+                                term = stem_dict[w_token]
+                            else:
+                                term = stemmer.stem(w_token)
+                                stem_dict[w_token] = term
 
-                        # Remove numbers
-                        if w_token.isnumeric() or len(term) == 0:
-                            continue
+                            # Remove numbers
+                            if w_token.isnumeric() or len(term) == 0:
+                                continue
 
-                        curr_lines_in_mem += 1
-                        if term not in dictionary:
-                            dictionary.add(term)
+                            curr_lines_in_mem += 1
+                            if term not in dictionary:
+                                dictionary.add(term)
 
-                        if str(doc_id) not in postings[term]:
-                            postings[term].append(str(doc_id))
+                            if doc_id not in postings[term]:
+                                postings[term].append(doc_id)
 
-                        # Write the previous items to new block
-                        if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
-                            self.WriteBlockToDisk(block_index, postings, dictionary)
-                            # Reset
-                            curr_lines_in_mem = 0
-                            postings = defaultdict(list)
-                            dictionary = set()
-                            block_index += 1
+                            # Write the previous items to new block
+                            if curr_lines_in_mem == self.MAX_LINES_TO_HOLD_IN_MEM:
+                                self.WriteBlockToDisk(block_index, postings, dictionary)
+                                print("Create block {} ({:.2f}s)".format(block_index, time.perf_counter() - start_time))
+                                start_time = time.perf_counter()
+                                # Reset
+                                curr_lines_in_mem = 0
+                                postings = defaultdict(list)
+                                dictionary = set()
+                                block_index += 1
 
         # Write last block if exists
         if curr_lines_in_mem > 0:
@@ -137,15 +160,13 @@ class InvertedIndex:
                         - dictionary: List of all the terms
         """
 
-        print("Create new block ... " + str(block_index))
-
         result = ""
         # Sort Dictionary Terms. Line 11 of SPIMI - INVERT
         for term in sorted(dictionary):
             result += term + " "
             # No need to sort postings because they are already in sorted form when we processed
             # the docs in ascending order previously
-            result += " ".join(postings[term])
+            result += " ".join([str(i) for i in postings[term]])
             result += "\n"
 
         self.WriteToFile("blocks/"+str(block_index), result)
@@ -194,6 +215,7 @@ class InvertedIndex:
                 q.put(QueueItem(line, block_num))
                 lines_per_block_mem[block_num] += 1
 
+        freq_dict = {}
         # K_WAY
         while not q.empty():
 
@@ -211,6 +233,7 @@ class InvertedIndex:
                 content = term_to_write + " " + " ".join(doc_ids_to_write) + "\n"
                 result_doc_ids_to_write.append(content)
                 result_term_to_write.append(term_to_write + " " + str(len(doc_ids_to_write)) + " " + str(posting_file_line_offset) + "\n") # Term Size Offset
+                freq_dict[term_to_write] = len(doc_ids_to_write)
                 posting_file_line_offset += len(content) + 1
 
                 # Complete posting list of prev term, hence increment to indicate new line in posting.txt
@@ -252,6 +275,7 @@ class InvertedIndex:
         # Write result in mem to file
         self.WriteToFile(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
         self.WriteToFile(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
+        self.WriteToFile("freq_sorted_dict.txt", ["{} {}\n".format(item[0], item[1]) for item in sorted(list(freq_dict.items()), key=lambda i: i[1], reverse=True)])
 
 
     def WriteToFile(self, out_file, result, append = False, fw = None):
@@ -313,7 +337,7 @@ class InvertedIndex:
     def GetSizeForTerm(self, term):
         try:
             size_of_posting_list, offset = self.dictionary[term]
-            return size_of_posting_list
+            return int(size_of_posting_list)
         except:
             return 0
 
