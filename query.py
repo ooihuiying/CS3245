@@ -25,7 +25,7 @@ class Query:
         """
         raise NotImplementedError("evaluate not implemented")
 
-    def getSize(self, inverted_index):
+    def get_size(self, inverted_index):
         raise NotImplementedError("getSize not implemented")
 
     def __str__(self):
@@ -39,11 +39,11 @@ class QueryTerm(Query):
 
     def evaluate(self, inverted_index):
         # TODO maybe make this an iterator
-        docs = inverted_index.GetPostingListForTerm(self.term)
+        docs = inverted_index.get_posting_list_for_term(self.term)
         return docs
 
-    def getSize(self, inverted_index):
-        return inverted_index.GetSizeForTerm(self.term)
+    def get_size(self, inverted_index):
+        return inverted_index.get_size_for_term(self.term)
 
     def __str__(self):
         return self.term
@@ -75,7 +75,7 @@ class QueryOr(Query):
 
         return len(union), sorted(list(union))
 
-    def getSize(self, inverted_index):
+    def get_size(self, inverted_index):
         if self.size == None:
             # Don't evaluate more than once
             self.size, self.union = self._evaluate(inverted_index)
@@ -98,21 +98,21 @@ class QueryAnd(Query):
 
         if len(self.ops_size) == 0:
             # While computing the size, the func fills up self.ops_size dict
-            self.getSize(inverted_index)
+            self.get_size(inverted_index)
 
         # Sort ops by size, evaluate from small to large
         sorted_ops = sorted(self.ops_size.items(), key=lambda x: x[1])
         lists = [list(op[0].evaluate(inverted_index)) for op in sorted_ops]
         merged_list = lists[0]
         for each_list in lists:
-            merged_list = self._mergeTwoLists(inverted_index, merged_list, each_list)
+            merged_list = self.merge_two_lists(inverted_index, merged_list, each_list)
 
         self.total_size = len(merged_list)
         return merged_list
 
-    def _mergeTwoLists(self, invertedIndex, list1, list2):
-        list1_skips = invertedIndex.GetSkipPointers(list1)
-        list2_skips = invertedIndex.GetSkipPointers(list2)
+    def merge_two_lists(self, invertedIndex, list1, list2):
+        list1_skips = invertedIndex.get_skip_pointers(list1)
+        list2_skips = invertedIndex.get_skip_pointers(list2)
 
         merged_list = []
         i = 0
@@ -138,10 +138,10 @@ class QueryAnd(Query):
         return merged_list
 
     # TODO: Double check this total_size
-    def getSize(self, inverted_index):
+    def get_size(self, inverted_index):
         self.total_size = 0
         for op in self.ops:
-            curr_size = op.getSize(inverted_index)
+            curr_size = op.get_size(inverted_index)
             self.ops_size[op] = curr_size
             self.total_size += curr_size
 
@@ -169,8 +169,8 @@ class QueryNot(Query):
         matches = self.operand1.evaluate(inverted_index)
         return inverted_index.all_files.difference(matches)
 
-    def getSize(self, inverted_index):
-        return self.operand1.getSize(inverted_index)
+    def get_size(self, inverted_index):
+        return self.operand1.get_size(inverted_index)
 
     def __str__(self):
         return "¬{}".format(self.operand1)
