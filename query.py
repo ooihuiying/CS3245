@@ -253,6 +253,13 @@ class QueryParser:
     @classmethod
     def tokenize(cls, query_string: str):
         tokens = []
+        lb = query_string.find("(")
+        if lb != -1:
+            rb = query_string.find(")")
+            if rb == -1:
+                raise Exception("Missing closing bracket in chunk {}".format(query_string))
+            return cls.tokenize(query_string[:lb]) + cls.tokenize(query_string[lb+1:rb]) + cls.tokenize(query_string[rb+1:])
+
         for chunk in query_string.split(" "):
             chunk = chunk.strip()
             if chunk == "":
@@ -263,21 +270,6 @@ class QueryParser:
                 tokens.append(Token.OR)
             elif chunk == "NOT":
                 tokens.append(Token.NOT)
-            elif chunk[0] == "(":
-                tokens.append(Token.LB)
-                rb = chunk.find(")")
-                remaining = chunk[1:].strip()
-                if rb != -1:
-                    remaining = chunk[1:rb].strip()
-                    tokens.append(remaining)
-                    tokens.append(Token.RB)
-                elif len(remaining) > 0:
-                    tokens.append(remaining)
-            elif chunk[-1] == ")":
-                remaining = chunk[:-1].strip()
-                if len(remaining) > 0:
-                    tokens.append(remaining)
-                tokens.append(Token.RB)
             else:
                 tokens.append(chunk)
         return tokens
