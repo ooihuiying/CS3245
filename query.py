@@ -82,11 +82,15 @@ class QueryOr(Query):
         # TODO: is there a better way?
         # Convert evaluate output to set
         # then compute union and convert back to sorted list
-        union = set(self.ops[0].evaluate(inverted_index))
-        # if not self.operand1.is_flipped and not self.operand2.is_flipped:
-        for op in self.ops:
-            curr_list = set(op.evaluate(inverted_index))
-            union.update(curr_list)
+        # union = set(self.ops[0].evaluate(inverted_index))
+        # # if not self.operand1.is_flipped and not self.operand2.is_flipped:
+        # for op in self.ops:
+        #     curr_list = set(op.evaluate(inverted_index))
+        #     union.update(curr_list)
+        ops = [set(op.evaluate(inverted_index)) for op in self.ops]
+        union = ops[0]
+        for op in ops[1:]:
+            union.update(op)
 
         return len(union), sorted(list(union))
 
@@ -119,7 +123,19 @@ class QueryAnd(Query):
 
         return ops
 
-    def evaluate(self, inverted_index):
+    def evaluate(self, index):
+        return self._evaluate_set(index)
+        return self._evaluate(index)
+
+    def _evaluate_set(self, inverted_index):
+        ops = [set(op.evaluate(inverted_index)) for op in self.ops]
+        merged = ops[0]
+        for op in ops[1:]:
+            merged.intersection_update(op)
+
+        return list(sorted(merged))
+
+    def _evaluate(self, inverted_index):
         if len(self.ops) == 0:
             return []
 
