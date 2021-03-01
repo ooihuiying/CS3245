@@ -21,7 +21,7 @@ class Query:
     def toDNF(self):
         return Query()
 
-    def evaluate(self, inverted_index):
+    def evaluate(self, inverted_index, forced=False):
         """
         Return a list of documents that satisfies the query
         """
@@ -40,7 +40,7 @@ class QueryTerm(Query):
         self.is_primitive = True
         self.term = stemmer.stem(term.strip().translate(translator).lower())
 
-    def evaluate(self, inverted_index):
+    def evaluate(self, inverted_index, **kwargs):
         # TODO maybe make this an iterator
         docs = inverted_index.get_posting_list_for_term(self.term)
         return docs
@@ -71,14 +71,14 @@ class QueryOr(Query):
 
         return ops
 
-    def evaluate(self, inverted_index):
+    def evaluate(self, inverted_index, **kwargs):
         if self.union == None:
             # Don't evaluate more than once
-            self.size, self.union = self._evaluate(inverted_index)
+            self.size, self.union = self._evaluate(inverted_index, **kwargs)
 
         return self.union
 
-    def _evaluate(self, inverted_index):
+    def _evaluate(self, inverted_index, forced=False):
         # TODO: is there a better way?
         # Convert evaluate output to set
         # then compute union and convert back to sorted list
@@ -87,10 +87,13 @@ class QueryOr(Query):
         # for op in self.ops:
         #     curr_list = set(op.evaluate(inverted_index))
         #     union.update(curr_list)
-        ops = [set(op.evaluate(inverted_index)) for op in self.ops]
+        # if forced:
+        ops = [set(op.evaluate(inverted_index, forced=True)) for op in self.ops]
         union = ops[0]
         for op in ops[1:]:
             union.update(op)
+        # else:
+
 
         return len(union), sorted(list(union))
 
@@ -123,17 +126,33 @@ class QueryAnd(Query):
 
         return ops
 
-    def evaluate(self, index):
+    def evaluate(self, index, **kwargs):
         return self._evaluate_set(index)
-        return self._evaluate(index)
+        # return self._evaluate(index)
 
     def _evaluate_set(self, inverted_index):
-        ops = [set(op.evaluate(inverted_index)) for op in self.ops]
-        merged = ops[0]
-        for op in ops[1:]:
-            merged.intersection_update(op)
+        add_ops = [set(op.evaluate(inverted_index)) for op in self.ops if not op.is_flipped]
+        negate_ops = [set(op.evaluate(inverted_index)) for op in self.ops if op.is_flipped]
 
-        return list(sorted(merged))
+        # case 1, all negate
+        if len(add_ops) == 0:
+            merged = negate_ops[0]
+            for op in negate_ops[1:]:
+                merged.update(op)
+            return list(sorted(inverted_index.all_files.difference(merged)))  # todo can still be improved
+        else:
+            merged = add_ops[0]
+            for op in add_ops[1:]:
+                merged.intersection_update(op)
+
+            # case 2, all add
+            if len(negate_ops) == 0:
+                return list(sorted(merged))
+
+            # case 3, some add, some negate
+            for op in negate_ops:
+                merged = merged - op
+            return list(sorted(merged))
 
     def _evaluate(self, inverted_index):
         if len(self.ops) == 0:
@@ -208,10 +227,12 @@ class QueryNot(Query):
         self.op = op
         self.is_flipped = not op.is_flipped
 
-    def evaluate(self, inverted_index: InvertedIndex):
-        # TODO remove temporary naive implementation
+    def evaluate(self, inverted_index: InvertedIndex, forced=False):
         matches = self.op.evaluate(inverted_index)
-        return inverted_index.all_files.difference(matches)
+        if forced:
+            return list(inverted_index.all_files.difference(matches))
+        else:
+            return matches
 
     def get_size(self, inverted_index):
         return self.op.get_size(inverted_index)

@@ -50,10 +50,10 @@ def run_search(dict_file, postings_file, queries_file, results_file):
                 n += 1
                 query = QueryParser.parse(query, use_sh)
                 # print(query.__str__())
-                posting_list = query.evaluate(inverted_index_class)
+                posting_list = query.evaluate(inverted_index_class, forced=True)
                 print("Query #{}: {} --> {} results".format(n, query, len(posting_list)))
 
-                out.append("\n".join([str(i) for i in posting_list]) + "\n")
+                out.append(" ".join([str(i) for i in posting_list]) + "\n")
                 # fw.write(" ".join([str(i) for i in posting_list]) + "\n")
 
             fw.writelines(out)
