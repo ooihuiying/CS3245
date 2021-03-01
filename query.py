@@ -258,7 +258,7 @@ class QueryParser:
             rb = query_string.find(")")
             if rb == -1:
                 raise Exception("Missing closing bracket in chunk {}".format(query_string))
-            return cls.tokenize(query_string[:lb]) + cls.tokenize(query_string[lb+1:rb]) + cls.tokenize(query_string[rb+1:])
+            return cls.tokenize(query_string[:lb]) + [Token.LB] + cls.tokenize(query_string[lb+1:rb]) + [Token.RB] + cls.tokenize(query_string[rb+1:])
 
         for chunk in query_string.split(" "):
             chunk = chunk.strip()
