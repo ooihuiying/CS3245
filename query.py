@@ -56,8 +56,20 @@ class QueryOr(Query):
     def __init__(self, ops):
         super().__init__()
         self.ops = ops
+        self.ops = self._flatten_ops()
         self.union = None
         self.size = None
+
+    def _flatten_ops(self):
+        ops = []
+        for op in self.ops:
+            if isinstance(op, QueryOr):
+                for _op in op._flatten_ops():
+                    ops.append(_op)
+            else:
+                ops.append(op)
+
+        return ops
 
     def evaluate(self, inverted_index):
         if self.union == None:
@@ -91,9 +103,21 @@ class QueryOr(Query):
 class QueryAnd(Query):
     def __init__(self, ops):
         super().__init__()
-        self.ops = ops
         self.ops_size = {}  # Dictionary to hold [op: size]
         self.total_size = None
+        self.ops = ops
+        self.ops = self._flatten_ops()
+
+    def _flatten_ops(self):
+        ops = []
+        for op in self.ops:
+            if isinstance(op, QueryAnd):
+                for _op in op._flatten_ops():
+                    ops.append(_op)
+            else:
+                ops.append(op)
+
+        return ops
 
     def evaluate(self, inverted_index):
         if len(self.ops) == 0:

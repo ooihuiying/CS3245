@@ -45,6 +45,8 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     with open(queries_file, 'r') as f:
         with open(results_file, 'w') as fw:
             for query in f:
+                if query == "":
+                    continue
                 n += 1
                 query = QueryParser.parse(query, use_sh)
                 # print(query.__str__())
