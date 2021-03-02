@@ -64,7 +64,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
 dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 
 try:
-    opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:s')
+    opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
 except getopt.GetoptError:
     usage()
     sys.exit(2)
@@ -78,8 +78,6 @@ for o, a in opts:
         file_of_queries = a
     elif o == '-o':
         file_of_output = a
-    elif o == '-s':
-        use_sh = True
     else:
         assert False, "unhandled option"
 

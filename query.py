@@ -278,8 +278,8 @@ class QueryParser:
     @classmethod
     def parse(cls, query_string: str, use_sh: bool = False):
         tokens = cls.tokenize(query_string)
-        if use_sh:
-            return cls._parse_sh(tokens)
+        # if use_sh:
+        #     return cls._parse_sh(tokens)
         return cls._parse(tokens)
 
     @classmethod
@@ -302,7 +302,7 @@ class QueryParser:
         return -1
 
     @classmethod
-    def _parse_sh(cls, tokens):
+    def _parse(cls, tokens):
         ops = []
         opr = []
         in_bracket = False
@@ -343,52 +343,3 @@ class QueryParser:
             op = cls._get_op(ops.pop())(operands)
             opr.append(op)
         return opr.pop()
-
-    @classmethod
-    def _parse(cls, tokens):
-        in_bracket = False
-        current = []
-        current_op = Token.AND
-        root = []  # a list of Queries in DNF
-        bracket_current = []
-        negate_next = False
-
-        for token in tokens:
-            if in_bracket and token == Token.RB:
-                subquery = cls._parse(bracket_current)
-                if negate_next:
-                    subquery = QueryNot(subquery)
-                    negate_next = False
-                current.append(subquery)  # TODO fix this
-                bracket_current = []
-                in_bracket = False
-            elif token == Token.LB:
-                in_bracket = True
-            elif in_bracket:
-                bracket_current.append(token)
-            elif token == Token.AND:
-                current_op = Token.AND
-            elif token == Token.OR:
-                if len(current) > 1:
-                    root.append(QueryAnd(current))
-                elif len(current) == 1:
-                    root.append(current[0])
-                current = []
-                current_op = Token.OR
-            elif token == Token.NOT:
-                negate_next = not negate_next
-            else:  # query term
-                query = QueryTerm(token)
-                if negate_next:
-                    query = QueryNot(query)
-                    negate_next = False
-                current.append(query)
-
-        if len(current) > 1:
-            root.append(QueryAnd(current))
-        elif len(current) == 1:
-            root.append(current[0])
-
-        if len(root) == 1:
-            return root[0]
-        return QueryOr(root)
