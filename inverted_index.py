@@ -276,6 +276,8 @@ class InvertedIndex:
         self.write_to_file(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
         self.write_to_file(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
         self.write_to_file("freq_sorted_dict.txt", ["{} {}\n".format(item[0], item[1]) for item in sorted(list(freq_dict.items()), key=lambda i: i[1], reverse=True)])
+        print("Dictionary size: {}".format(len(freq_dict)))
+        print("Posting list size: {}".format(sum(freq_dict.values())))
 
 
     def write_to_file(self, out_file, result, append = False, fw = None):

@@ -7,6 +7,7 @@ from inverted_index import InvertedIndex
 stemmer = nltk.PorterStemmer()
 translator = str.maketrans('', '', string.punctuation)
 
+
 # TODO: Add NOT functionality
 # TODO: Optimise queries (skip pointers, size of postings, AND NOT) - done skip pointers and size of posting
 # TODO: Create test data set to check correctness - partially done...
@@ -14,12 +15,13 @@ translator = str.maketrans('', '', string.punctuation)
 class Query:
     def __init__(self):
         self.is_flipped = False
+        self.is_primitive = False
         pass
 
     def toDNF(self):
         return Query()
 
-    def evaluate(self, inverted_index):
+    def evaluate(self, inverted_index, forced=False):
         """
         Return a list of documents that satisfies the query
         """
@@ -35,9 +37,10 @@ class Query:
 class QueryTerm(Query):
     def __init__(self, term=""):
         super().__init__()
+        self.is_primitive = True
         self.term = stemmer.stem(term.strip().translate(translator).lower())
 
-    def evaluate(self, inverted_index):
+    def evaluate(self, inverted_index, **kwargs):
         # TODO maybe make this an iterator
         docs = inverted_index.get_posting_list_for_term(self.term)
         return docs
@@ -53,25 +56,44 @@ class QueryOr(Query):
     def __init__(self, ops):
         super().__init__()
         self.ops = ops
+        self.ops = self._flatten_ops()
         self.union = None
         self.size = None
 
-    def evaluate(self, inverted_index):
+    def _flatten_ops(self):
+        ops = []
+        for op in self.ops:
+            if isinstance(op, QueryOr):
+                for _op in op._flatten_ops():
+                    ops.append(_op)
+            else:
+                ops.append(op)
+
+        return ops
+
+    def evaluate(self, inverted_index, **kwargs):
         if self.union == None:
             # Don't evaluate more than once
-            self.size, self.union = self._evaluate(inverted_index)
+            self.size, self.union = self._evaluate(inverted_index, **kwargs)
 
         return self.union
 
-    def _evaluate(self, inverted_index):
+    def _evaluate(self, inverted_index, forced=False):
         # TODO: is there a better way?
         # Convert evaluate output to set
         # then compute union and convert back to sorted list
-        union = set(self.ops[0].evaluate(inverted_index))
-        # if not self.operand1.is_flipped and not self.operand2.is_flipped:
-        for op in self.ops:
-            curr_list = set(op.evaluate(inverted_index))
-            union.update(curr_list)
+        # union = set(self.ops[0].evaluate(inverted_index))
+        # # if not self.operand1.is_flipped and not self.operand2.is_flipped:
+        # for op in self.ops:
+        #     curr_list = set(op.evaluate(inverted_index))
+        #     union.update(curr_list)
+        # if forced:
+        ops = [set(op.evaluate(inverted_index, forced=True)) for op in self.ops]
+        union = ops[0]
+        for op in ops[1:]:
+            union.update(op)
+        # else:
+
 
         return len(union), sorted(list(union))
 
@@ -88,11 +110,51 @@ class QueryOr(Query):
 class QueryAnd(Query):
     def __init__(self, ops):
         super().__init__()
-        self.ops = ops
-        self.ops_size = {} # Dictionary to hold [op: size]
+        self.ops_size = {}  # Dictionary to hold [op: size]
         self.total_size = None
+        self.ops = ops
+        self.ops = self._flatten_ops()
 
-    def evaluate(self, inverted_index):
+    def _flatten_ops(self):
+        ops = []
+        for op in self.ops:
+            if isinstance(op, QueryAnd):
+                for _op in op._flatten_ops():
+                    ops.append(_op)
+            else:
+                ops.append(op)
+
+        return ops
+
+    def evaluate(self, index, **kwargs):
+        return self._evaluate_set(index)
+        # return self._evaluate(index)
+
+    def _evaluate_set(self, inverted_index):
+        add_ops = [set(op.evaluate(inverted_index)) for op in self.ops if not op.is_flipped]
+        negate_ops = [set(op.evaluate(inverted_index)) for op in self.ops if op.is_flipped]
+
+        # case 1, all negate
+        if len(add_ops) == 0:
+            merged = negate_ops[0]
+            for op in negate_ops[1:]:
+                merged.update(op)
+            return list(sorted(inverted_index.all_files.difference(merged)))  # todo can still be improved
+        else:
+            merged = add_ops[0]
+            for op in add_ops[1:]:
+                merged.intersection_update(op)
+
+            # case 2, all add
+            if len(negate_ops) == 0:
+                return list(sorted(merged))
+
+            # case 3, some add, some negate
+            for op in negate_ops:
+                merged = merged - op
+            return list(sorted(merged))
+
+    def _evaluate(self, inverted_index):
         if len(self.ops) == 0:
             return []
 
@@ -111,29 +173,32 @@ class QueryAnd(Query):
         return merged_list
 
     def merge_two_lists(self, invertedIndex, list1, list2):
-        list1_skips = invertedIndex.get_skip_pointers(list1)
-        list2_skips = invertedIndex.get_skip_pointers(list2)
+        # list1_skips = invertedIndex.get_skip_pointers(list1)
+        # list2_skips = invertedIndex.get_skip_pointers(list2)
+        # list1_skips = []
+        # list2_skips = []
 
         merged_list = []
         i = 0
         j = 0
-        while i < len(list1) and j < len(list2):
+        a, b = len(list1), len(list2)  # cache list sizes to save on repeated invocations of len(list)
+        while i < a and j < b:
             if list1[i] == list2[j]:
                 merged_list.append(list1[i])
                 i += 1
                 j += 1
             elif list1[i] < list2[j]:
-                next_i = list1_skips[i]
-                if next_i != i and list1[next_i] < list2[j]:
-                    i = next_i
-                else:
-                    i += 1
+                # next_i = list1_skips[i]
+                # if next_i != i and list1[next_i] < list2[j]:
+                #     i = next_i
+                # else:
+                i += 1
             else:
-                next_j = list2_skips[j]
-                if next_j != j and list2[next_j] < list1[i]:
-                    j = next_j
-                else:
-                    j += 1
+                # next_j = list2_skips[j]
+                # if next_j != j and list2[next_j] < list1[i]:
+                #     j = next_j
+                # else:
+                j += 1
 
         return merged_list
 
@@ -156,24 +221,24 @@ class QueryAnd(Query):
 
 
 class QueryNot(Query):
-    def __init__(self, op1:Query):
+    def __init__(self, op: Query):
         super().__init__()
-        self.operand1 = op1
-        self.is_flipped = not op1.is_flipped
-        # new_op = op1.copy()
-        # new_op.is_flipped = not new_op.is_flipped
-        # return new_op
+        self.is_primitive = op.is_primitive
+        self.op = op
+        self.is_flipped = not op.is_flipped
 
-    def evaluate(self, inverted_index:InvertedIndex):
-        # TODO remove temporary naive implementation
-        matches = self.operand1.evaluate(inverted_index)
-        return inverted_index.all_files.difference(matches)
+    def evaluate(self, inverted_index: InvertedIndex, forced=False):
+        matches = self.op.evaluate(inverted_index)
+        if forced:
+            return list(inverted_index.all_files.difference(matches))
+        else:
+            return matches
 
     def get_size(self, inverted_index):
-        return self.operand1.get_size(inverted_index)
+        return self.op.get_size(inverted_index)
 
     def __str__(self):
-        return "¬{}".format(self.operand1)
+        return "¬{}".format(self.op)
 
 
 class Token:
@@ -183,10 +248,18 @@ class Token:
     LB = 4
     RB = 5
 
+
 class QueryParser:
     @classmethod
     def tokenize(cls, query_string: str):
         tokens = []
+        lb = query_string.find("(")
+        if lb != -1:
+            rb = query_string.find(")")
+            if rb == -1:
+                raise Exception("Missing closing bracket in chunk {}".format(query_string))
+            return cls.tokenize(query_string[:lb]) + [Token.LB] + cls.tokenize(query_string[lb+1:rb]) + [Token.RB] + cls.tokenize(query_string[rb+1:])
+
         for chunk in query_string.split(" "):
             chunk = chunk.strip()
             if chunk == "":
@@ -197,29 +270,16 @@ class QueryParser:
                 tokens.append(Token.OR)
             elif chunk == "NOT":
                 tokens.append(Token.NOT)
-            elif chunk[0] == "(":
-                tokens.append(Token.LB)
-                rb = chunk.find(")")
-                remaining = chunk[1:].strip()
-                if rb != -1:
-                    remaining = chunk[1:rb].strip()
-                    tokens.append(remaining)
-                    tokens.append(Token.RB)
-                elif len(remaining) > 0:
-                    tokens.append(remaining)
-            elif chunk[-1] == ")":
-                remaining = chunk[:-1].strip()
-                if len(remaining) > 0:
-                    tokens.append(remaining)
-                tokens.append(Token.RB)
             else:
                 tokens.append(chunk)
         return tokens
 
     # Z AND A OR (B AND C) OR (D OR E)
     @classmethod
-    def parse(cls, query_string: str):
+    def parse(cls, query_string: str, use_sh: bool = False):
         tokens = cls.tokenize(query_string)
+        # if use_sh:
+        #     return cls._parse_sh(tokens)
         return cls._parse(tokens)
 
     @classmethod
@@ -233,52 +293,53 @@ class QueryParser:
         else:
             raise ValueError("No such op")
 
+    @classmethod
+    def _get_precedence(self, op_token):
+        if op_token == Token.AND:
+            return 1
+        if op_token == Token.OR:
+            return 2
+        return -1
 
     @classmethod
     def _parse(cls, tokens):
+        ops = []
+        opr = []
         in_bracket = False
-        current = []
-        current_op = Token.AND
-        root = [] # a list of Queries in DNF
         bracket_current = []
         negate_next = False
 
         for token in tokens:
             if in_bracket and token == Token.RB:
-                subquery = cls._parse(bracket_current)
+                subquery = cls._parse_sh(bracket_current)
                 if negate_next:
                     subquery = QueryNot(subquery)
                     negate_next = False
-                current.append(subquery) # TODO fix this
+                opr.append(subquery)
                 bracket_current = []
                 in_bracket = False
             elif token == Token.LB:
                 in_bracket = True
             elif in_bracket:
                 bracket_current.append(token)
-            elif token == Token.AND:
-                current_op = Token.AND
-            elif token == Token.OR:
-                if len(current) > 1:
-                    root.append(QueryAnd(current))
-                elif len(current) == 1:
-                    root.append(current[0])
-                current = []
-                current_op = Token.OR
             elif token == Token.NOT:
                 negate_next = not negate_next
+            elif token == Token.AND or token == Token.OR:
+                # ops.append(token)
+                if len(ops) > 0 and cls._get_precedence(token) >= cls._get_precedence(ops[-1]):
+                    operands = [opr.pop(), opr.pop()]
+                    op = cls._get_op(ops.pop())(operands)
+                    opr.append(op)
+                ops.append(token)
             else:  # query term
                 query = QueryTerm(token)
                 if negate_next:
                     query = QueryNot(query)
                     negate_next = False
-                current.append(query)
+                opr.append(query)
 
-        if len(current) > 1:
-            root.append(QueryAnd(current))
-        elif len(current) == 1:
-            root.append(current[0])
-
-        if len(root) == 1:
-            return root[0]
-        return QueryOr(root)
+        while len(ops) > 0:
+            operands = [opr.pop(), opr.pop()]
+            op = cls._get_op(ops.pop())(operands)
+            opr.append(op)
+        return opr.pop()

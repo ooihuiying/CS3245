@@ -14,6 +14,7 @@ from query import QueryParser
 def usage():
     print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results")
 
+use_sh = False
 def run_search(dict_file, postings_file, queries_file, results_file):
     """
     using the given dictionary file and postings file,
@@ -40,61 +41,25 @@ def run_search(dict_file, postings_file, queries_file, results_file):
 
     start_time = time.perf_counter()
     n = 0
+    out = []
     with open(queries_file, 'r') as f:
-        for query in f:
-            n += 1
-            query = QueryParser.parse(query)
-            print(query.__str__())
-            posting_list = query.evaluate(inverted_index_class)
-            print("Query #{}: {} --> {} results".format(n, query, len(posting_list)))
-            # print(" ".join([str(int) for int in posting_list]) + "\n")
+        with open(results_file, 'w') as fw:
+            for query in f:
+                query = query.strip()
+                if query == "":
+                    continue
+                n += 1
+                query = QueryParser.parse(query, use_sh)
+                # print(query.__str__())
+                posting_list = query.evaluate(inverted_index_class, forced=True)
+                print("Query #{}: {} --> {} results".format(n, query, len(posting_list)))
+
+                out.append(" ".join([str(i) for i in posting_list]) + "\n")
+                # fw.write(" ".join([str(i) for i in posting_list]) + "\n")
+
+            fw.writelines(out)
 
     print("{} queries completed in {:.2f}s".format(n, time.perf_counter() - start_time))
-
-    # Get the corresponding posting List for Term -> "brake"
-    # query = "brake"
-    # size, posting_list = inverted_index_class.GetPostingListForTerm(query)
-    # for p in posting_list:
-    #     print(p, end = " ")
-    # print("\n")
-
-    # AND
-    # term1 AND term2
-    # OR
-    # term1 OR term2
-
-    # NOT
-    # NOT term1
-
-    # NOT term1 AND term2
-    # NOT term1 AND NOT term2
-
-    # NOT term1 OR  term2
-    # NOT term1 OR NOT term2
-
-    # term1 AND (term2 OR term3)
-    # (term1 AND term2) OR term3
-
-    # NOT term1 AND (term2 OR term3)
-    # term1 AND (NOT term2 OR term3)
-    # NOT (term1 AND term2) OR term3
-
-    # (term1 AND term2) OR term3
-
-    # A OR B OR (C AND D) OR
-    # A + B + CD + ...
-
-    # A AND B AND C AND (D OR E)
-    # A AND B AND C AND D OR A AND B AND C AND E
-    # ABCD + ABCE # DNF (this one better)
-    # ABC (D + E) # CNF
-
-    # Obtain the skip list for current postingList
-    # skip_list = inverted_index_class.GetSkipPointers(posting_list)
-    # for s in skip_list:
-    #     print(s, end = " ")
-
-    ############################################
 
 dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 

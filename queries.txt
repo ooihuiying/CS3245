@@ -1,50 +1,100 @@
-two
-subject
-east
-north
-corpor
-good
-anoth
-studi
-yet
-call
-NOT rather
-NOT depend
-NOT nation
-NOT view
-NOT told
-NOT expir
-NOT depart
-NOT almost
-NOT tokyo
-NOT enter
-analyst AND between
-currenc AND brazil
-disput AND term
-cut AND have
-season AND comput
-septemb AND drop
-per AND determin
-tokyo AND steel
-manag AND but
-say AND averag
-soviet OR contain
-pact OR contain
-now OR if
-heavi OR until
-pay OR paid
-loan OR clear
-steel OR local
-construct OR almost
-approv OR abov
-purchas OR made
-buy OR immedi AND also AND quarterli OR 2nd AND tokyo AND heavi AND transact AND east OR brazil
-at AND co AND it AND compani OR east OR valu AND good AND central OR no OR which
-overal AND york AND outstand AND that AND import AND lend AND place OR banker OR state OR import
-definit OR qtr OR potenti OR step OR mark AND higher AND too AND foreign AND discontinu OR some
-price AND corpor OR encourag AND sharpli AND wheat OR combin OR depart OR those OR white AND stock
-polit OR loss OR undisclos OR new OR low OR prefer OR total OR economi AND close OR trader
-form OR lt AND declar OR septemb OR minist AND a OR share OR earlier OR origin OR revis
-jame OR abl OR among AND slow AND white AND sugar OR just AND commit OR could OR greater
-chang OR cost OR back AND unchang AND cent OR again OR consum AND initi AND meet AND june
-asset OR tax OR determin OR field AND america OR usda OR confid AND just OR york OR march
+for OR NOT mainli OR NOT includ OR NOT continu AND NOT washington OR decid OR NOT will AND NOT case OR NOT ministri OR figur OR NOT condit OR NOT which AND prepar AND NOT becaus OR NOT qtli AND and OR NOT greater OR economi OR NOT basi AND sell
+third AND takeov OR past AND NOT rate AND low AND NOT materi OR sector OR NOT whether AND fail OR june OR tokyo AND london AND NOT currenc AND NOT account OR NOT face OR common OR NOT commit OR NOT those AND NOT again AND NOT through
+given AND direct AND began OR acquir AND firm AND NOT statement OR prospect OR NOT signific AND NOT turnov OR NOT exceed AND NOT indic OR crop AND NOT world OR tariff OR NOT compar OR debt AND NOT near OR NOT europ OR china OR NOT intent
+NOT come AND at AND NOT wa OR NOT process AND money OR NOT if AND NOT into AND take AND worker AND NOT world AND fell AND NOT contain AND boost OR due OR post AND increas OR australian AND NOT as OR NOT greater AND arrang
+NOT note AND NOT four OR impact AND NOT index OR NOT competit AND NOT declar AND signific AND NOT what AND NOT bank OR NOT take OR NOT borrow AND revenu OR NOT both OR NOT move AND turnov OR NOT offset AND expans OR NOT indic OR NOT later AND pressur
+NOT discount OR council AND corn OR growth OR previou OR NOT minist OR NOT februari AND ago OR own AND NOT expans OR NOT out AND NOT hit OR sharpli OR particip OR NOT like AND NOT bank AND NOT despit OR NOT sale AND NOT execut AND NOT reuter
+NOT may AND for OR reduct OR repurchas OR NOT forc OR NOT execut OR NOT credit AND NOT vote OR NOT creat OR NOT texa AND befor OR begin OR NOT encourag OR NOT benefit AND NOT execut AND who OR coffe AND NOT worker OR common AND NOT loan
+NOT overal OR ad AND less AND NOT commerci AND NOT vice AND NOT confer AND four AND germani AND NOT worth AND explor OR commerci OR NOT initi AND NOT east OR NOT they AND NOT lend OR s OR then AND becom AND less OR off
+rise AND NOT and AND NOT capit AND NOT part OR about OR told OR NOT particip OR intent OR NOT stg AND that AND forecast OR NOT level AND NOT avail AND NOT usda AND NOT into OR so AND NOT yesterday OR institut AND reduct AND NOT foreign
+share AND qtli AND spend AND NOT grow OR NOT project OR posit AND commod AND uk AND NOT continu AND put OR place AND NOT dollar OR NOT earn AND NOT expans AND NOT disput OR tokyo OR sign OR NOT affect AND NOT partner AND full
+NOT period AND NOT contract OR then AND NOT merger AND NOT back AND normal OR carri AND note OR creat OR NOT fund OR NOT almost AND intend OR NOT convert OR NOT price AND same AND ga OR NOT sold AND NOT reserv AND japan AND NOT common
+ltd AND institut OR NOT retail OR uk AND NOT cash AND short OR enter OR NOT about OR longer AND condit OR lower AND target OR boost AND payment AND NOT close AND NOT co AND told AND NOT februari OR director OR boost
+deliveri OR NOT do AND note AND record AND basi AND worth AND befor AND NOT nt OR hit OR NOT creat AND asset OR short OR within OR NOT minist AND NOT crude OR commit OR lt AND NOT announc OR NOT order AND presid
+longer AND attempt OR NOT arrang AND NOT organ OR NOT termin AND drop AND NOT liquid AND NOT estim AND NOT cut AND NOT call AND NOT or AND institut AND NOT restructur OR NOT figur OR NOT began OR slightli AND find AND NOT can AND too OR NOT protect
+NOT home AND NOT dec AND hous OR bond OR save OR NOT dealer OR NOT contain OR NOT unchang AND NOT call AND a AND NOT for AND NOT disput OR NOT senior OR NOT yesterday OR commit AND specif AND present OR NOT august OR NOT anoth OR NOT file
+NOT five OR white OR corpor OR gener AND NOT paid OR NOT regular OR NOT commit AND manufactur OR specif OR reduc AND reagan OR continu OR dec OR crude OR NOT data OR NOT consider AND NOT head OR ec AND NOT anoth AND NOT announc
+at OR NOT be AND NOT consumpt OR NOT privat OR when OR inc OR NOT see AND NOT press OR NOT what AND NOT earlier OR can OR resourc AND NOT gold AND minist AND five AND will OR expir OR bid AND letter AND NOT by
+do AND next OR NOT show OR NOT power AND NOT leav OR NOT quot OR four OR NOT each OR NOT australia OR total AND franc AND effect AND NOT plant AND london AND NOT corp OR NOT slightli AND NOT decemb OR NOT yen OR NOT who AND administr
+decis OR same OR bring OR far OR aid AND final AND world OR NOT set OR NOT daili AND record OR announc OR NOT letter OR season OR servic OR predict AND NOT that AND requir OR NOT juli OR NOT top OR near
+NOT press AND NOT negoti OR NOT part AND NOT use OR NOT one OR consumpt AND discontinu OR australia OR texa AND NOT better AND NOT run OR NOT feder OR NOT tender OR NOT local OR expens AND gener OR NOT bill AND NOT affili OR sold OR NOT need
+capac AND repres OR NOT banker AND NOT short OR push OR NOT took OR NOT make OR NOT cash OR NOT brazil OR NOT place AND s OR mani AND NOT show OR NOT those OR NOT posit OR due OR off OR rais OR NOT author AND chang
+ask OR NOT plant OR sign AND NOT establish OR NOT appear OR NOT firm OR NOT if OR tomorrow OR seen AND administr AND them OR later AND NOT mani AND NOT second OR NOT avail AND senior OR NOT call OR NOT push AND might AND clear
+began OR NOT petroleum OR NOT seek OR natur OR NOT give AND further OR NOT fourth AND NOT common AND NOT confer AND NOT friday AND reject OR wheat AND although AND ad OR cost OR firm OR NOT make AND NOT rose AND busi OR lt
+find AND plan AND senior OR NOT five OR cash OR NOT against AND NOT post AND american OR releas OR NOT told OR total AND local AND befor AND NOT rose OR NOT corpor OR NOT approv AND NOT day OR most OR net OR NOT price
+NOT west OR NOT specif AND posit AND offset AND port OR NOT develop OR budget AND money OR worker AND contain AND NOT payabl OR NOT prospect OR surplu AND NOT offic AND NOT predict OR NOT minist OR NOT into OR NOT foreign AND NOT least OR commerc
+quota OR NOT own OR NOT such OR NOT announc OR ag AND NOT maintain OR NOT europ AND depend OR offic AND NOT profit AND NOT yield OR commod OR member OR holder OR NOT domest AND liquid OR NOT began AND NOT restructur AND dlr AND sourc
+respect AND index AND NOT liquid OR NOT between AND compani AND nine OR where OR intent AND session AND NOT maintain OR NOT activ AND end AND state OR discount AND NOT be AND NOT stake OR NOT improv OR japan AND own OR which
+unchang AND issu OR NOT juli AND NOT subsidiari OR NOT polit AND NOT feb AND NOT clear OR NOT past AND number AND april AND whether OR NOT commerci AND over OR NOT foreign AND addit OR power OR three OR want OR NOT execut AND NOT respons
+NOT soviet AND NOT parti AND NOT top OR exist OR pact OR equip OR NOT competit OR NOT reach AND NOT sign OR go AND NOT product AND project OR NOT short AND NOT fail OR NOT detail AND NOT execut AND NOT impact AND unit AND NOT up AND gener
+NOT larg AND yen AND NOT other OR NOT tomorrow OR confer OR talk AND NOT cost AND NOT further AND NOT payment OR NOT offset AND NOT avail AND NOT into AND decemb AND NOT repurchas OR NOT european OR NOT these AND NOT prospect AND after OR NOT equip AND NOT east
+data AND NOT base AND NOT interest OR think AND NOT revis OR NOT agenc AND NOT contribut OR NOT real AND NOT equal AND fed AND hold AND NOT barrel AND NOT partner AND new AND NOT american AND energi AND clear AND NOT trade AND NOT express OR meet
+yen AND NOT balanc OR NOT small AND NOT decis OR NOT expect OR billion AND NOT hold AND washington AND spend OR NOT contain OR NOT but AND worker OR NOT main AND NOT europ AND those OR NOT consider AND NOT field OR both OR far AND NOT intend
+and AND 4th OR NOT dealer AND NOT make OR think AND month AND NOT believ AND steel AND borrow AND NOT did AND NOT follow AND build AND some AND sharp AND impact AND NOT cut AND NOT analyst AND NOT execut AND success AND save
+NOT area OR worth OR NOT among OR coffe AND number OR no AND restructur AND NOT privat AND NOT trader AND NOT flow AND NOT there OR what OR NOT washington OR NOT committe OR eight OR countri OR loan OR NOT industri OR name OR NOT ag
+NOT immedi AND foreign AND ministri OR other AND greater OR onli AND NOT studi OR equal OR turnov OR NOT soybean OR combin OR jan OR such AND qtli OR NOT between AND keep AND form AND combin OR substanti AND soybean
+expens OR bill OR quarter OR place AND predict AND agricultur AND NOT date OR NOT australia OR NOT well OR NOT contract OR fix OR NOT transport AND director OR deliveri AND demand OR agreement AND NOT canadian AND NOT give OR australian OR NOT japan
+NOT food AND NOT mine OR NOT take AND becom AND dec AND purchas AND NOT save AND NOT partner AND oper AND so OR NOT follow AND worth OR enough OR NOT necessari OR NOT requir OR NOT region OR accord AND white AND NOT currenc AND NOT ct
+flow OR NOT seen AND exceed AND it OR veri AND NOT also AND NOT return OR NOT affili OR few OR develop AND NOT hous OR NOT decemb OR NOT loss OR NOT store OR NOT by AND NOT facil AND NOT white AND economist OR NOT parti AND disput
+NOT agenc OR NOT trader OR NOT senior AND decis AND NOT advanc OR NOT exceed OR feb AND NOT increas OR japan AND output AND NOT sharp AND took OR NOT turnov AND morn OR NOT continu AND NOT polit OR ask AND s OR NOT meet OR NOT gener
+NOT also AND NOT expans OR key AND NOT 3rd OR NOT wheat OR NOT gross OR NOT slightli OR NOT act AND bought AND NOT prospect OR NOT includ OR NOT jan OR measur AND NOT institut AND NOT make AND prime AND credit OR NOT european AND pct AND NOT day
+contain OR NOT materi AND expand OR letter AND NOT special AND where AND aid OR NOT item AND NOT target OR express AND level AND NOT turnov AND NOT unless OR hold AND NOT record OR bid OR NOT jan OR NOT offer OR confer OR far
+NOT feb OR liquid OR NOT prior OR NOT joint AND NOT establish AND receiv OR fail OR NOT loss AND bond AND NOT board AND ec OR NOT stop AND expect OR NOT firm OR unchang AND revis AND littl OR well OR below OR NOT fix
+NOT begin AND NOT on AND compani AND effect AND borrow AND NOT into OR NOT problem OR NOT relat OR NOT bank OR treasuri OR discount AND NOT texa OR acquir AND involv OR combin OR NOT rev OR NOT process OR NOT view AND littl OR NOT no
+NOT fiscal AND qtr OR fiscal AND between AND decid AND find OR NOT produc AND NOT go AND peopl OR NOT fund OR NOT sever AND unit AND NOT direct AND NOT unless AND NOT against OR NOT per OR amount OR offic AND NOT us AND stg
+barrel OR NOT show AND NOT ship AND NOT adjust AND NOT estim OR oper AND NOT question OR NOT decemb OR NOT which AND NOT price OR inflat AND NOT prepar OR NOT corp AND hold AND NOT number OR washington AND futur OR futur AND NOT money AND hi
+not OR earlier OR NOT materi AND deficit OR comput AND NOT loss OR NOT takeov OR place AND NOT citi OR NOT five OR NOT maintain OR later AND NOT ag OR still OR NOT western OR NOT lower AND commiss OR NOT toward AND view OR involv
+NOT common OR NOT until OR NOT up OR fiscal AND NOT franc OR less AND NOT bring OR work OR NOT overal OR NOT inc OR NOT commun AND NOT releas OR distribut OR trend OR them AND NOT repurchas AND prospect OR NOT minist OR NOT sharpli AND ct
+slow OR director AND record OR tomorrow OR expans OR it AND on OR NOT unchang OR basi OR NOT record OR research OR request AND NOT total AND congress AND shipment AND vote AND NOT fail AND but OR NOT soon OR NOT appear
+next OR face AND stabil OR NOT area OR NOT gener AND NOT shipment AND NOT ltd OR build AND NOT chemic OR NOT off OR i AND there AND approv AND area AND NOT look OR predict AND NOT unchang AND acquisit OR termin AND show
+ministri OR led OR NOT tax OR gain AND close AND consolid OR rather AND NOT effect AND NOT news OR improv AND NOT here AND question AND NOT presid OR NOT electron AND earlier AND NOT have AND NOT record OR NOT despit OR NOT two AND research
+output AND NOT export OR NOT incom OR lower OR NOT effect AND NOT purchas OR domest OR qtli OR futur AND NOT countri AND NOT daili OR countri OR intern AND NOT hi AND heavi AND reason AND NOT farm AND NOT better OR NOT reserv AND NOT activ
+oper AND between AND no OR bank OR longterm AND NOT brazil OR credit OR seek AND NOT fund AND NOT banker OR probabl AND look AND NOT futur OR holder OR NOT vs OR NOT indic OR may AND recommend OR NOT economi OR sugar
+friday OR NOT up AND region OR NOT earli OR rather OR currenc AND part AND acquisit OR are AND NOT south OR NOT compar AND foreign AND NOT told OR far OR corn AND NOT price AND NOT back OR NOT prior OR much AND NOT reflect
+one OR meet OR NOT same AND NOT three OR spokesman AND NOT meet AND tax AND NOT august AND NOT also AND import AND NOT reuter OR both AND total AND one OR NOT earn AND NOT paid OR next OR NOT under AND move OR NOT author
+NOT deal AND NOT longterm AND affili OR NOT below OR australian OR NOT hope OR NOT contribut AND face AND need OR NOT earli OR NOT repurchas AND line OR fell AND subject AND veri AND gross AND negoti OR NOT daili OR start OR NOT quot
+NOT offici AND NOT against OR level OR NOT effort OR commit AND NOT latest OR rang AND NOT base AND ltd OR NOT ago OR NOT carri AND each AND provid AND becom AND NOT offic OR damag OR NOT cost OR NOT through OR NOT cut OR domest
+NOT further OR without OR NOT order OR juli OR NOT trend OR franc AND septemb AND polici OR longterm AND NOT chang AND NOT budget OR NOT affect OR will OR NOT sold OR NOT research OR interest OR NOT volum OR price OR NOT offic OR NOT expans
+NOT manag AND good AND NOT shr AND NOT outstand AND NOT region OR third AND jame OR NOT order AND option OR manag OR NOT expans AND NOT difficult AND deleg AND NOT 1st AND NOT bill OR NOT yen OR countri AND face AND deficit AND NOT find
+expand AND account OR NOT surplu AND due AND pay OR japan OR NOT from OR NOT prime OR NOT almost AND NOT expand OR into AND NOT corpor OR NOT japan AND name AND normal OR begin AND key OR NOT get AND NOT well OR within
+port AND NOT can OR NOT expir OR NOT western AND thi OR NOT reagan AND can AND NOT account OR stg AND sugar OR output OR coffe OR NOT an AND NOT nation OR NOT clear OR NOT grow AND NOT capac AND NOT against OR final OR NOT nt
+come AND NOT file OR come AND NOT point OR NOT littl OR NOT talk OR season OR british OR NOT tariff OR now OR cooper AND NOT urg AND NOT deal AND NOT begin OR NOT until OR NOT six OR NOT transport AND NOT 3rd OR NOT until OR NOT stock
+NOT from AND NOT top AND ventur AND NOT quarterli AND NOT barrel AND buy AND east AND NOT govern OR discontinu OR explor OR recent OR can AND offer AND within AND NOT offic AND NOT set AND trade AND NOT steel OR now OR nation
+NOT with OR quarterli AND stg AND interview OR first OR NOT analyst OR manag OR NOT jame AND mani AND NOT bond AND that AND factor OR co OR project OR inform AND offset AND perform AND stop AND free AND NOT suggest
+soon AND compar AND benefit OR have AND NOT greater OR privat AND key OR nine OR merger AND NOT administr AND forc AND NOT unchang AND pretax OR NOT 4th OR NOT april OR acquisit AND NOT current AND NOT sharp AND NOT reject OR NOT bank
+divis AND NOT custom AND pact AND ministri AND NOT least AND lend OR NOT whether AND accord OR petroleum OR NOT full OR abov OR NOT dollar OR vs OR plc AND NOT suggest OR NOT stabil OR money AND NOT deliveri OR like AND domest
+NOT too OR had AND texa OR NOT investor OR NOT back AND without AND exist AND agre OR mani OR offic AND NOT ad OR begin OR NOT sell OR exist AND compani AND NOT short OR power OR NOT partner OR paid OR NOT div
+are AND NOT member AND NOT longterm AND england AND NOT british OR hit AND NOT quot OR NOT soviet AND stg OR NOT offer OR situat OR bought AND put AND NOT most OR NOT substanti AND NOT approv AND NOT quarterli AND NOT law OR began AND NOT view
+subsidiari AND NOT ship AND recommend AND wa AND contract OR boost OR do OR while AND NOT law OR NOT into OR recommend OR repurchas AND request AND NOT custom AND discuss OR research AND NOT signific AND NOT juli AND NOT per OR NOT today
+research OR receiv AND commun AND should AND econom AND earli OR worker AND NOT subsidiari OR NOT polit OR and OR NOT balanc OR NOT delay OR NOT statement OR below AND NOT expens AND treasuri OR power AND NOT holder OR by OR NOT follow
+NOT nearli OR NOT explor AND NOT ltd AND NOT led OR NOT now AND NOT corn OR thi AND japanes OR NOT larg AND area OR NOT countri AND volum OR there AND NOT about OR presid OR NOT action OR ltd AND 1st OR NOT compar OR take
+NOT vote OR under AND adjust AND NOT limit AND NOT forecast AND NOT intern AND NOT unlik AND revenu AND tax AND hi OR electron OR give OR NOT govern OR NOT our AND ltd AND use AND more AND NOT name AND 4th AND expans
+NOT april AND NOT determin AND exceed AND NOT author OR NOT head OR NOT feder OR NOT japanes OR shr AND NOT acquisit OR NOT third AND NOT treasuri AND NOT or OR these AND corp AND lower OR borrow OR petroleum AND determin AND NOT news AND sinc
+NOT necessari OR might OR NOT budget AND creat OR NOT rise AND friday OR crude AND other AND one OR run AND NOT befor OR system AND union AND review OR NOT hit OR effort OR NOT letter OR exceed OR NOT where OR NOT stop
+NOT between AND NOT an OR NOT stabil AND NOT anoth AND fourth AND NOT tonn OR NOT or OR cooper AND merger OR NOT posit OR NOT court AND repres OR net AND NOT save OR took OR within AND money OR it AND NOT provis AND NOT studi
+NOT that OR NOT soon AND NOT vs OR competit AND law OR NOT he AND NOT us AND NOT detail AND littl AND growth AND NOT higher OR net OR NOT tomorrow AND NOT help AND NOT took OR which OR NOT call AND german OR NOT press AND NOT custom
+NOT exclud OR i AND NOT there AND project AND NOT vs AND NOT friday AND NOT plc OR gulf AND NOT earn AND NOT put OR credit AND NOT while AND later AND NOT trust OR expens OR consolid OR NOT revis AND NOT ltd OR NOT concern OR higher
+point AND NOT like OR NOT investor OR NOT howev AND lt AND NOT worker AND NOT germani AND yen AND NOT pay OR receiv OR NOT payment OR NOT fed AND NOT press AND larg AND NOT now AND NOT end AND NOT say AND NOT made OR commod OR NOT sharpli
+while OR fourth AND so OR south AND expir OR NOT basi OR could AND larg OR NOT quarter AND NOT power AND NOT restructur OR expect OR clear OR NOT disput AND NOT level OR NOT whether AND monetari OR prime OR commiss OR NOT aid
+NOT rev AND rang AND our AND support OR shortag AND NOT south OR short AND NOT cent OR there OR NOT file AND NOT sugar AND certain AND involv OR trader AND give OR NOT uk OR NOT europ OR NOT would OR corp OR NOT do
+investor AND NOT joint AND NOT pay AND NOT australian OR ct OR five AND NOT associ OR more OR decemb OR rather AND NOT valu AND NOT tri AND exist OR turnov AND concern AND trader OR NOT week OR most AND against OR NOT england
+incom OR NOT chairman OR energi AND like AND could OR good AND NOT sourc OR NOT europ AND benefit AND asset AND NOT say OR american AND predict AND citi AND NOT forc OR that AND start AND say AND busi AND expens
+parti AND foreign AND restructur AND NOT asset AND NOT season AND depart AND NOT natur AND british OR protect OR NOT report OR NOT manufactur OR NOT put AND NOT agricultur OR flow AND NOT strong AND lt AND takeov AND NOT acquisit AND dealer AND maintain
+week AND NOT basi OR NOT stake OR agricultur OR schedul AND competit OR NOT ltd AND NOT state AND NOT clear OR NOT start AND privat AND NOT york AND market OR NOT build OR encourag AND NOT holder OR NOT mln AND lead AND NOT immedi OR part
+rang AND total AND NOT far AND NOT export AND NOT sale OR NOT take OR technolog OR provid OR NOT usda AND NOT year AND NOT urg OR NOT purchas OR billion AND NOT where AND NOT intent AND NOT crop OR fell OR nearli OR littl AND too
+NOT are OR NOT depart OR NOT divis OR NOT largest OR result AND NOT up AND veri AND review OR NOT buy AND save AND NOT usda AND NOT sharp OR NOT prepar AND NOT novemb OR NOT act OR i OR probabl OR extend AND bid AND NOT german
+NOT further AND NOT last OR partner OR NOT past OR need OR slow OR NOT cooper OR NOT project OR NOT show AND NOT volum OR NOT quota AND intervent AND NOT associ OR NOT hit OR NOT european OR NOT britain OR NOT agre AND system AND NOT return AND been
+effect AND NOT analyst AND NOT corn AND NOT hi AND NOT natur OR those AND NOT monetari AND includ OR NOT against OR china OR NOT expir AND make OR nil AND worth OR contribut OR NOT member AND would OR agreement AND profit OR NOT restrict
+NOT provis AND tariff OR NOT law AND seven OR balanc AND intent OR NOT when OR NOT money AND revenu OR NOT repurchas OR NOT senior OR japan OR NOT potenti AND NOT about AND NOT confer OR releas AND begin OR exist AND NOT late OR england
+NOT report OR payout AND NOT insur AND mainli OR NOT had OR later OR NOT commiss OR revenu AND usda OR NOT unlik OR allow OR inc AND NOT citi OR NOT until AND accept OR NOT reagan OR out OR NOT for AND NOT possibl AND NOT short
+NOT look AND NOT top OR direct AND septemb AND NOT ventur OR wheat AND NOT far AND NOT product OR NOT monday AND earlier AND addit OR what OR NOT under OR particip AND mean OR NOT declar OR NOT down OR NOT on OR season AND note
+benefit AND union AND NOT alreadi OR NOT 4th OR strong AND find OR west AND detail AND NOT dure OR NOT major OR been OR eas OR comput AND their AND NOT agenc AND NOT region AND subsidiari OR NOT associ AND sugar OR NOT deficit
+NOT suppli AND monetari OR mainli AND NOT sold AND organ OR NOT today AND ministri AND plant OR NOT were OR begin OR discuss OR NOT still AND fund OR NOT due OR NOT fund OR NOT commerc AND where OR eight OR then OR it
+NOT power OR save OR NOT per OR maintain OR NOT minist OR NOT view OR privat OR tariff OR NOT octob AND NOT show OR clear OR NOT transact OR NOT march AND NOT need OR run OR NOT predict AND properti AND NOT session OR NOT unchang AND NOT will
+billion AND NOT inflat AND ad AND control AND NOT get AND transact OR said AND dealer AND yield AND reagan AND expect AND NOT depart OR least OR maintain OR NOT lower AND NOT offici AND taken OR NOT mine OR NOT previou OR usda
+NOT rose OR some AND merger AND paid OR NOT north OR NOT present AND NOT largest OR NOT out OR NOT previous OR NOT hit OR provis OR NOT open OR sinc OR trader OR had AND annual OR NOT world AND NOT member OR paper OR grain
+were AND chairman AND enough AND restrict AND octob AND for AND recommend AND NOT restrict AND offic OR action AND NOT remain AND problem OR NOT dealer AND NOT wa OR over AND NOT week AND NOT june AND steel AND as OR NOT busi
+NOT go AND NOT europ AND NOT deliveri AND NOT perform AND output AND NOT tender OR third OR NOT competit AND NOT expens OR NOT ec OR NOT nt AND NOT grain AND present OR NOT case OR NOT over OR encourag AND NOT fell OR NOT certain AND up AND contract
+NOT employ OR set OR NOT slightli AND come OR announc AND NOT current OR NOT major OR NOT convert AND and OR call OR just AND soybean OR NOT analyst OR sinc OR NOT return AND NOT look AND NOT gulf AND avg OR NOT our AND i
+NOT tomorrow OR fix AND NOT benefit OR reserv OR part AND NOT co AND NOT feder AND compar AND NOT bond OR facil OR similar AND high OR NOT higher AND NOT week OR call AND NOT there AND NOT three AND file AND part AND just
+set OR merger AND NOT septemb AND ask AND NOT yield AND NOT set AND NOT reduct OR NOT sinc OR NOT project OR up AND quarterli AND NOT grain OR invest OR sinc AND act AND off OR NOT doe OR accord AND NOT joint AND NOT sharp

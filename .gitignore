@@ -4,3 +4,14 @@ reuters
 __pycache__
 venv
 blocks
+
+*.txt
+!document_id_list.txt
+!README.txt
+!dictionary.txt
+!Essay.txt
+!postings.txt
+!queries.txt
+!test/queries*.txt
+!test/expected*.txt
+!test/data
