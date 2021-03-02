@@ -235,8 +235,8 @@ class InvertedIndex:
                     posting_file_line_offset) + "\n")  # Term Size Offset
                 freq_dict[term_to_write] = len(docs_with_skip)
 
-                posting_file_line_offset += len(content) + 1  # + 1 when running on windows
-                # posting_file_line_offset += len(content) # For when running on unix
+                # posting_file_line_offset += len(content) + 1  # + 1 when running on windows
+                posting_file_line_offset += len(content) # For when running on unix
 
                 # Complete posting list of prev term, hence increment to indicate new line in posting.txt
                 curr_lines_in_mem += 1
@@ -280,6 +280,8 @@ class InvertedIndex:
         # Write result in mem to file
         self.write_to_file(self.out_postings, "".join(result_doc_ids_to_write), True, write_posting_file_pointer)
         self.write_to_file(self.out_dict, "".join(result_term_to_write), True, write_dict_file_pointer)
+        print("Dictionary size: {}".format(len(freq_dict)))
+        print("Posting list size: {}".format(sum(freq_dict.values())))
         self.write_to_file("freq_sorted_dict.txt", ["{} {}\n".format(item[0], item[1]) for item in
                                                     sorted(list(freq_dict.items()), key=lambda i: i[1], reverse=True)])
 

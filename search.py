@@ -37,7 +37,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     ############################################
 
     inverted_index_class = InvertedIndex(out_dict=dict_file, out_postings=postings_file)
-    print(queries_file)
+
     start_time = time.perf_counter()
     n = 0
     out = []
@@ -49,6 +49,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
                     continue
                 n += 1
                 query = QueryParser.parse(query, use_sh)
+                # print(query.__str__())
                 posting_list = query.evaluate(inverted_index_class, forced=True)
                 print("Query #{}: {} --> {} results".format(n, query, len(posting_list)))
 
