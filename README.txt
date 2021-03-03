@@ -41,15 +41,38 @@ document ids for the query and save the query results into the output file.
     We will then perform K-Way merging.
     The dictionary.txt and posting.txt will be written.
 (d) Skip Pointers:
-    We only construct skip pointers when it is required from the query file. A function is exposed to take in a posting list and
-    it will return another list which contains the index to jump to at a particular index of the list. The heuristic is to use
-    evenly spaced skip pointers.
+    Following from (c), each line contains [A B] where B is [C C C C ... C]. C is either a single doc id or a single doc id appended by ; and the doc id
+    of it's next skip, depending on its' position.
+    Every X distance, the doc id will have an additional ; and doc id of it's next skip.
+    During indexing, we define X to be ceil(sqrt(len(posting_list))).
 
 <<Searching>>
 (e) Parsing:
     TODO
+    The Shunting-Yard Parser is used.
+    
 (f) Evaluation:
     TODO
+
+    (OR)
+    - We apply a Set Union on all the Ops
+
+    (AND)
+    (1) When we have to apply AND on operators without Negation, we will sort them by size and merge every two of them.
+    - If the ops of AND is a primitive query term, we will apply skip pointers.
+      Continuing from (d), during the search run time, for each C in B, we will check for the value after ; to see if the current doc_id has a skip pointer.
+      The value gives us the next doc id value should the skip be taken. If it is present, we will compare the values and decide whether to apply the skip.
+      If the skip is to be applied, according to the length of the list, the jump value will be calculated.
+    - If the ops of AND is not a primitive query term, we will make use of python set intersection to do the work. It is more time efficient to build the intersection
+      compared to constructing the skip pointers at run time.
+    (2) When the Ops of AND are all Negated.
+    - Applying De-Morgan's Law, we will perform UNION on the ops (without negation) and then negate the result.
+    (3) When we have a mix of Negated and Non-Negated Ops
+    - We will apply (1) for Non-Negated ops and compute its' difference with all the Negated Ops.
+
+    (NOT)
+    - If it is a single primitive NOT Term, we will take the diff of all the doc_id with the doc_id of the term.
+
 == Files included with this submission ==
 
 List the files in your submission here and provide a short 1 line
