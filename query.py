@@ -150,10 +150,7 @@ class QueryAnd(Query):
                 merged = [x[0] for x in merged_ops]
             else:
                 # Case where we only have 1 list in add_ops
-                if len(add_ops[0][0]) == 0:
-                    merged = []
-                else:
-                    merged = [x[0] for x in add_ops[0][0]]
+                merged = [x[0] for x in add_ops[0][0]]
 
             # case 2, all add
             if len(negate_ops) == 0:
