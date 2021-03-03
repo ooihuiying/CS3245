@@ -7,11 +7,6 @@ from inverted_index import InvertedIndex
 stemmer = nltk.PorterStemmer()
 translator = str.maketrans('', '', string.punctuation)
 
-
-# TODO: Add NOT functionality
-# TODO: Optimise queries (skip pointers, size of postings, AND NOT) - done skip pointers and size of posting
-# TODO: Create test data set to check correctness - partially done...
-
 class Query:
     def __init__(self):
         self.is_flipped = False
@@ -38,13 +33,29 @@ class QueryTerm(Query):
         self.term = stemmer.stem(term.strip().translate(translator).lower())
 
     def evaluate(self, inverted_index, forced=False):
-
-        # TODO maybe make this an iterator
-        docs = [int(str(op).split(";")[0]) for op in inverted_index.get_posting_list_for_term(self.term)]
+        """
+        :param inverted_index:
+        :param forced:
+        :return: Returns a list of integers
+        """
+        docs = [int(op.split(";")[0]) for op in inverted_index.get_posting_list_for_term(self.term)]
         return docs
 
     def _evaluate(self, inverted_index):
-        return inverted_index.get_posting_list_for_term(self.term)
+        """
+        :param inverted_index:
+        :return: Returns a list of tuples (curr, next) where curr is the doc_id and next is the value of the next skip val if exist.
+                Otherwise, next will be -1 if no skip is allowed for that doc.
+        """
+        docs = []
+        for op in inverted_index.get_posting_list_for_term(self.term):
+            split_op = op.split(";")
+            curr = split_op[0]
+            next = -1
+            if len(split_op) == 2:
+                next = split_op[1]
+            docs.append((int(curr), int(next)))
+        return docs
 
     def get_size(self, inverted_index):
         return inverted_index.get_size_for_term(self.term)
@@ -108,14 +119,15 @@ class QueryAnd(Query):
 
     def evaluate(self, inverted_index, **kwargs):
 
-        add_ops = []
+        add_ops = [] # Format of (curr, next)
         for op in self.ops:
             if not op.is_flipped:
                 if op.is_primitive:
                     #isinstance(op, QueryTerm)
                     add_ops.append((op._evaluate(inverted_index), op.get_size(inverted_index)))
                 else:
-                    add_ops.append((op.evaluate(inverted_index), op.get_size(inverted_index)))
+                    list_ops = [(x, -1) for x in op.evaluate(inverted_index)]
+                    add_ops.append((list_ops, op.get_size(inverted_index)))
 
         negate_ops = [set(op.evaluate(inverted_index)) for op in self.ops if op.is_flipped]
 
@@ -128,19 +140,23 @@ class QueryAnd(Query):
             self.size = len(all_negate)
             return all_negate  # todo can still be improved
         else:
-
             # Sort by evaluated op size
-            sorted_evaluated_add_ops = sorted(add_ops, key=lambda x: x[1])
+            add_ops = sorted(add_ops, key=lambda x: x[1])
 
-            if len(sorted_evaluated_add_ops) > 1:
-                merged = sorted_evaluated_add_ops[0][0]
-                merged_list_size = sorted_evaluated_add_ops[0][1]
-                for each_list in sorted_evaluated_add_ops[1:]:
-                    merged = self.merge_two_lists(merged, each_list[0], merged_list_size, each_list[1])
+            if len(add_ops) > 1:
+                # We have to merge more than 1 list
+                merged_ops = add_ops[0][0]
+                merged_list_size = add_ops[0][1]
+                for each_list in add_ops[1:]:
+                    merged_ops = self.merge_two_lists(merged_ops, each_list[0], merged_list_size, each_list[1])
                     merged_list_size = 0 # The merged list will have no skip pointers, hence 0 jumps
+                merged = [x[0] for x in merged_ops]
             else:
-                merged = [int(str(x).split(";")[0]) for x in sorted_evaluated_add_ops[0][0]]
-
+                # Case where we only have 1 list in add_ops
+                if len(add_ops[0][0]) == 0:
+                    merged = []
+                else:
+                    merged = [x[0] for x in add_ops[0][0]]
 
             # case 2, all add
             if len(negate_ops) == 0:
@@ -166,22 +182,26 @@ class QueryAnd(Query):
         merged_list = []
         i = 0
         j = 0
+
         while i < list1_size and j < list2_size:
-            item_1 = str(list1[i]).split(";")
-            item_2 = str(list2[j]).split(";")
-            if int(item_1[0]) == int(item_2[0]):
-                merged_list.append(int(item_1[0]))
+            item_1 = list1[i]
+            item_2 = list2[j]
+            if item_1[0] == item_2[0]:
+                if isinstance(item_1, tuple):
+                    merged_list.append(item_1)
+                else:
+                    merged_list.append((item_1, -1))
                 i += 1
                 j += 1
-            elif int(item_1[0]) < int(item_2[0]):
+            elif item_1[0] < item_2[0]:
                 # Has skip pointer
-                if len(item_1) == 2 and int(item_1[1]) < int(item_2[0]):
+                if item_1[1] != -1 and item_1[1] < item_2[0]:
                     i += jump_1
                 else:
                     i += 1
             else:
                 # Has skip pointer
-                if len(item_2) == 2 and int(item_2[1]) < int(item_1[0]):
+                if item_2[1] != -1 and item_2[1] < item_1[0]:
                     j += jump_2
                 else:
                     j += 1
