@@ -34,18 +34,15 @@ class QueryTerm(Query):
 
     def evaluate(self, inverted_index, forced=False):
         """
-        :param inverted_index:
-        :param forced:
-        :return: Returns a list of integers
+        Returns a list of integers
         """
         docs = [int(op.split(";")[0]) for op in inverted_index.get_posting_list_for_term(self.term)]
         return docs
 
     def _evaluate(self, inverted_index):
         """
-        :param inverted_index:
-        :return: Returns a list of tuples (curr, next) where curr is the doc_id and next is the value of the next skip val if exist.
-                Otherwise, next will be -1 if no skip is allowed for that doc.
+        Returns a list of tuples (curr, next) where curr is the doc_id and next is the value of the next skip val if exist.
+        Otherwise, next will be -1 if no skip is allowed for that doc.
         """
         docs = []
         for op in inverted_index.get_posting_list_for_term(self.term):
