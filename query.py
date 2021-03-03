@@ -1,5 +1,5 @@
 import string
-
+from math import ceil, sqrt
 import nltk
 
 from inverted_index import InvertedIndex
@@ -17,9 +17,6 @@ class Query:
         self.is_flipped = False
         self.is_primitive = False
         pass
-
-    def toDNF(self):
-        return Query()
 
     def evaluate(self, inverted_index, forced=False):
         """
@@ -40,10 +37,14 @@ class QueryTerm(Query):
         self.is_primitive = True
         self.term = stemmer.stem(term.strip().translate(translator).lower())
 
-    def evaluate(self, inverted_index, **kwargs):
+    def evaluate(self, inverted_index, forced=False):
+
         # TODO maybe make this an iterator
-        docs = inverted_index.get_posting_list_for_term(self.term)
+        docs = [int(str(op).split(";")[0]) for op in inverted_index.get_posting_list_for_term(self.term)]
         return docs
+
+    def _evaluate(self, inverted_index):
+        return inverted_index.get_posting_list_for_term(self.term)
 
     def get_size(self, inverted_index):
         return inverted_index.get_size_for_term(self.term)
@@ -57,7 +58,6 @@ class QueryOr(Query):
         super().__init__()
         self.ops = ops
         self.ops = self._flatten_ops()
-        self.union = None
         self.size = None
 
     def _flatten_ops(self):
@@ -71,47 +71,27 @@ class QueryOr(Query):
 
         return ops
 
-    def evaluate(self, inverted_index, **kwargs):
-        if self.union == None:
-            # Don't evaluate more than once
-            self.size, self.union = self._evaluate(inverted_index, **kwargs)
-
-        return self.union
-
-    def _evaluate(self, inverted_index, forced=False):
-        # TODO: is there a better way?
-        # Convert evaluate output to set
-        # then compute union and convert back to sorted list
-        # union = set(self.ops[0].evaluate(inverted_index))
-        # # if not self.operand1.is_flipped and not self.operand2.is_flipped:
-        # for op in self.ops:
-        #     curr_list = set(op.evaluate(inverted_index))
-        #     union.update(curr_list)
-        # if forced:
+    def evaluate(self, inverted_index, forced=False):
         ops = [set(op.evaluate(inverted_index, forced=True)) for op in self.ops]
         union = ops[0]
         for op in ops[1:]:
             union.update(op)
-        # else:
 
+        union = sorted(list(union))
+        self.size = len(union)
 
-        return len(union), sorted(list(union))
+        return union
 
     def get_size(self, inverted_index):
-        if self.size == None:
-            # Don't evaluate more than once
-            self.size, self.union = self._evaluate(inverted_index)
         return self.size
 
     def __str__(self):
         return "∨".join([op.__str__() for op in self.ops])
 
-
 class QueryAnd(Query):
     def __init__(self, ops):
         super().__init__()
-        self.ops_size = {}  # Dictionary to hold [op: size]
-        self.total_size = None
+        self.size = None
         self.ops = ops
         self.ops = self._flatten_ops()
 
@@ -126,12 +106,17 @@ class QueryAnd(Query):
 
         return ops
 
-    def evaluate(self, index, **kwargs):
-        return self._evaluate_set(index)
-        # return self._evaluate(index)
+    def evaluate(self, inverted_index, **kwargs):
 
-    def _evaluate_set(self, inverted_index):
-        add_ops = [set(op.evaluate(inverted_index)) for op in self.ops if not op.is_flipped]
+        add_ops = []
+        for op in self.ops:
+            if not op.is_flipped:
+                if op.is_primitive:
+                    #isinstance(op, QueryTerm)
+                    add_ops.append((op._evaluate(inverted_index), op.get_size(inverted_index)))
+                else:
+                    add_ops.append((op.evaluate(inverted_index), op.get_size(inverted_index)))
+
         negate_ops = [set(op.evaluate(inverted_index)) for op in self.ops if op.is_flipped]
 
         # case 1, all negate
@@ -139,86 +124,75 @@ class QueryAnd(Query):
             merged = negate_ops[0]
             for op in negate_ops[1:]:
                 merged.update(op)
-            return list(sorted(inverted_index.all_files.difference(merged)))  # todo can still be improved
+            all_negate = list(sorted(inverted_index.all_files.difference(merged)))
+            self.size = len(all_negate)
+            return all_negate  # todo can still be improved
         else:
-            merged = add_ops[0]
-            for op in add_ops[1:]:
-                merged.intersection_update(op)
+
+            # Sort by evaluated op size
+            sorted_evaluated_add_ops = sorted(add_ops, key=lambda x: x[1])
+
+            if len(sorted_evaluated_add_ops) > 1:
+                merged = sorted_evaluated_add_ops[0][0]
+                merged_list_size = sorted_evaluated_add_ops[0][1]
+                for each_list in sorted_evaluated_add_ops[1:]:
+                    merged = self.merge_two_lists(merged, each_list[0], merged_list_size, each_list[1])
+                    merged_list_size = 0 # The merged list will have no skip pointers, hence 0 jumps
+            else:
+                merged = [int(x.split(";")[0]) for x in sorted_evaluated_add_ops[0][0]]
+
 
             # case 2, all add
             if len(negate_ops) == 0:
-                return list(sorted(merged))
+                self.size = len(merged)
+                return merged
 
             # case 3, some add, some negate
+            merged = set(merged)
             for op in negate_ops:
                 merged = merged - op
-            return list(sorted(merged))
+            diff = list(sorted(merged))
+            self.size = len(diff)
+            return diff
 
-    def _evaluate(self, inverted_index):
-        if len(self.ops) == 0:
-            return []
+    def merge_two_lists(self, list1, list2, list1_size, list2_size):
 
-        if len(self.ops_size) == 0:
-            # While computing the size, the func fills up self.ops_size dict
-            self.get_size(inverted_index)
+        jump_1 = ceil(sqrt(list1_size))
+        jump_2 = ceil(sqrt(list2_size))
 
-        # Sort ops by size, evaluate from small to large
-        sorted_ops = sorted(self.ops_size.items(), key=lambda x: x[1])
-        lists = [list(op[0].evaluate(inverted_index)) for op in sorted_ops]
-        merged_list = lists[0]
-        for each_list in lists:
-            merged_list = self.merge_two_lists(inverted_index, merged_list, each_list)
-
-        self.total_size = len(merged_list)
-        return merged_list
-
-    def merge_two_lists(self, invertedIndex, list1, list2):
-        # list1_skips = invertedIndex.get_skip_pointers(list1)
-        # list2_skips = invertedIndex.get_skip_pointers(list2)
-        # list1_skips = []
-        # list2_skips = []
+        if list1_size == 0:
+            list1_size = len(list1)
 
         merged_list = []
         i = 0
         j = 0
-        a, b = len(list1), len(list2)  # cache list sizes to save on repeated invocations of len(list)
-        while i < a and j < b:
-            if list1[i] == list2[j]:
-                merged_list.append(list1[i])
+        while i < list1_size and j < list2_size:
+            item_1 = str(list1[i]).split(";")
+            item_2 = str(list2[j]).split(";")
+            if int(item_1[0]) == int(item_2[0]):
+                merged_list.append(int(item_1[0]))
                 i += 1
                 j += 1
-            elif list1[i] < list2[j]:
-                # next_i = list1_skips[i]
-                # if next_i != i and list1[next_i] < list2[j]:
-                #     i = next_i
-                # else:
-                i += 1
+            elif int(item_1[0]) < int(item_2[0]):
+                # Has skip pointer
+                if len(item_1) == 2 and int(item_1[1]) < int(item_2[0]):
+                    i += jump_1
+                else:
+                    i += 1
             else:
-                # next_j = list2_skips[j]
-                # if next_j != j and list2[next_j] < list1[i]:
-                #     j = next_j
-                # else:
-                j += 1
+                # Has skip pointer
+                if len(item_2) == 2 and int(item_2[1]) < int(item_1[0]):
+                    j += jump_2
+                else:
+                    j += 1
 
         return merged_list
 
-    # TODO: Double check this total_size
     def get_size(self, inverted_index):
-        self.total_size = 0
-        for op in self.ops:
-            curr_size = op.get_size(inverted_index)
-            self.ops_size[op] = curr_size
-            self.total_size += curr_size
-
-        # Return self.total_size when this particular QueryAND has been evaluated and this getSize method
-        # is called by another Query obj.
-        # Otherwise, it means getSize was called by the current QueryAnd obj and we return self.total_size which evaluates
-        # to None. In this case, the total_size val is not used and we aare actually only concerned with populating self.ops_size.
-        return self.total_size
+        return self.size
 
     def __str__(self):
         return "∧".join([op.__str__() for op in self.ops])
-
 
 class QueryNot(Query):
     def __init__(self, op: Query):
@@ -226,16 +200,20 @@ class QueryNot(Query):
         self.is_primitive = op.is_primitive
         self.op = op
         self.is_flipped = not op.is_flipped
+        self.size = None
 
     def evaluate(self, inverted_index: InvertedIndex, forced=False):
         matches = self.op.evaluate(inverted_index)
         if forced:
-            return list(inverted_index.all_files.difference(matches))
+            diff = list(inverted_index.all_files.difference(matches))
+            self.size = len(diff)
+            return diff
         else:
+            self.size = len(matches)
             return matches
 
     def get_size(self, inverted_index):
-        return self.op.get_size(inverted_index)
+        return self.size
 
     def __str__(self):
         return "¬{}".format(self.op)
@@ -311,7 +289,7 @@ class QueryParser:
 
         for token in tokens:
             if in_bracket and token == Token.RB:
-                subquery = cls._parse_sh(bracket_current)
+                subquery = cls._parse(bracket_current)
                 if negate_next:
                     subquery = QueryNot(subquery)
                     negate_next = False
