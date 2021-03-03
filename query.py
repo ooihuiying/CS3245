@@ -119,7 +119,7 @@ class QueryAnd(Query):
 
     def evaluate(self, inverted_index, **kwargs):
 
-        add_ops = [] # Format of (curr, next)
+        add_ops = [] # Format of each list item:(curr, next)
         for op in self.ops:
             if not op.is_flipped:
                 if op.is_primitive:
@@ -172,7 +172,11 @@ class QueryAnd(Query):
             return diff
 
     def merge_two_lists(self, list1, list2, list1_size, list2_size):
-
+        """
+            Takes in 2 lists.
+            Each list contains items of the format : (curr_doc_id, next_doc_id) where next_doc_id is the next skip
+            The output is a single list of the same format
+        """
         jump_1 = ceil(sqrt(list1_size))
         jump_2 = ceil(sqrt(list2_size))
 
@@ -187,10 +191,7 @@ class QueryAnd(Query):
             item_1 = list1[i]
             item_2 = list2[j]
             if item_1[0] == item_2[0]:
-                if isinstance(item_1, tuple):
-                    merged_list.append(item_1)
-                else:
-                    merged_list.append((item_1, -1))
+                merged_list.append(item_1)
                 i += 1
                 j += 1
             elif item_1[0] < item_2[0]:
