@@ -22,12 +22,12 @@ document ids for the query and save the query results into the output file.
 (a) Reading Files
     The system reads the files in ascending order of their file names. For eg, 1.txt is read before 2.txt.
 (b) Pre-processing
-    For each file, in order to collect the vocabulary, we applied tokenisation and stemming on the document text.
-    nltk.sent_tokenize() and nltk.word_tokenize() were used to tokenize sentences and words. Case folding is applied to all words.
+    For each file, in order to collect the vocabulary, we apply tokenisation and stemming on the document text.
+    nltk.sent_tokenize() and nltk.word_tokenize() are used to tokenize sentences and words. Case folding is applied to all words.
     Punctuations are stripped. Stemmed values which only contain numbers are also removed. Stop words are not removed from the vocabulary.
     In order to reduce repeated stemming on the same words to improve speed of indexing, previously stemmed words are stored in stem_dict.
 (c) Scalable Indexing Construction:
-    SPIMI was implemented. We set 100000 to be the maximum number of lines that the memory can hold.
+    SPIMI is implemented. We set 100000 to be the maximum number of lines that the memory can hold.
     We build the postings list of the terms as the term-docID pairs are processed.
     Terms are stored in a dictionary set. Posting lists are stored in the form of HashMap.
     When the number of pairs processed reaches the limit of 100000, we will then treat whatever that is currently held in memory to belong to a block.
@@ -69,7 +69,8 @@ document ids for the query and save the query results into the output file.
     (1) When we have to apply AND on operators without Negation, we will sort them by size and merge every two of them.
     - If the ops of AND is a primitive query term, we will apply skip pointers.
       Continuing from (d), during the search run time, for each C in B, we will check for the value after ; to see if the current doc_id has a skip pointer.
-      The value gives us the next doc id value should the skip be taken. If it is present, we will compare the values and decide whether to apply the skip.
+      The value gives us the next doc id value should the skip be taken. If it is present and does not have the pre-set val of -1, we will compare the values
+      and decide whether to apply the skip.
       If the skip is to be applied, according to the length of the list, the jump value will be calculated.
     - If the ops of AND is not a primitive query term, we will make use of python set intersection to do the work. It is more time efficient to build the intersection
       compared to constructing the skip pointers at run time.
@@ -94,7 +95,7 @@ and formatted correctly.
 (2) inverted_index.py: It contains the main logic of constructing the dictionary and posting lists. It contains methods to aid in processing search queries.
 (3) query.py: It takes in all the queries and calls the appropriate functions in query.py and write the final returned results.
 (4) search.py: It contains the main logic of parsing the input query and evaluating results.
-(5) Essay.txt: It contains our answers to the essay questions.
+(5) essay.txt: It contains our answers to the essay questions.
 (6) dictionary.txt: It contains the terms of the inverted index. Each line is in the format of [A B C]
     where A is the term value, B is the length of the posting_list for A and C is the offset value of the line containing the term in posting.txt file.
 (7) postings.txt: Each line is in the format of [A B] where A is the term value and B are the document ids associated with it separated by space.
