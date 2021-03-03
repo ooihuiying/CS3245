@@ -47,6 +47,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
                 query = query.strip()
                 if query == "":
                     out.append("\n")
+                    continue
                 n += 1
                 query = QueryParser.parse(query, use_sh)
                 # print(query.__str__())
