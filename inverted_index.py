@@ -1,4 +1,5 @@
 import os
+from sys import platform
 import shutil
 import string
 import time
@@ -46,6 +47,12 @@ class InvertedIndex:
         # Load Dictionary Terms into memory when search.py initialises inverted_index
         if in_dir == "":
             self.load_dictionary_from_mem()
+
+        if platform == "win32":
+            print("Running on Windows")
+            self.new_line_offset = 1
+        else:
+            self.new_line_offset = 0
 
     """
         ////////////////////////////////////////
@@ -235,8 +242,7 @@ class InvertedIndex:
                     posting_file_line_offset) + "\n")  # Term Size Offset
                 freq_dict[term_to_write] = len(docs_with_skip)
 
-                # posting_file_line_offset += len(content) + 1  # + 1 when running on windows
-                posting_file_line_offset += len(content) # For when running on unix
+                posting_file_line_offset += len(content) + self.new_line_offset
 
                 # Complete posting list of prev term, hence increment to indicate new line in posting.txt
                 curr_lines_in_mem += 1

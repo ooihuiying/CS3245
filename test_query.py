@@ -17,7 +17,7 @@ def usage():
     print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file")
 
 
-def TestSingleQuery(inverted_index_class):
+def test_single_query(inverted_index_class):
     query = QueryParser.parse("a")
     assert query.__str__() == 'a'
     posting_list = query.evaluate(inverted_index_class, forced=True)
@@ -29,7 +29,7 @@ def TestSingleQuery(inverted_index_class):
     assert posting_list == [0]
 
 
-def TestAndQueries(inverted_index_class):
+def test_and_queries(inverted_index_class):
 
     # Single AND
     query = QueryParser.parse("a AND b")
@@ -64,7 +64,7 @@ def TestAndQueries(inverted_index_class):
     assert len(posting_list) == 0
 
 
-def TestOrQueries(inverted_index_class):
+def test_or_queries(inverted_index_class):
     # Single OR
     query = QueryParser.parse("a OR z")
     assert query.__str__() == 'z∨a'
@@ -96,7 +96,7 @@ def TestOrQueries(inverted_index_class):
     assert posting_list == [1]
 
 
-def TestNotQueries(inverted_index_class):
+def test_not_queries(inverted_index_class):
     # Single NOT
     query = QueryParser.parse("NOT z")
     assert query.__str__() == '¬z'
@@ -155,7 +155,7 @@ def TestNotQueries(inverted_index_class):
     assert posting_list == [2]
     return False
 
-def TestMixQueries(inverted_index_class):
+def test_mix_queries(inverted_index_class):
     query = QueryParser.parse("(a OR r) AND (r AND z)")
     assert query.__str__() == 'z∧r∧r∨a'
     posting_list = query.evaluate(inverted_index_class, forced=True)
@@ -196,15 +196,15 @@ def run_test(dict_file, postings_file):
     # Query index
     inverted_index_class_done = InvertedIndex("", dict_file, postings_file)
 
-    TestSingleQuery(inverted_index_class_done)
+    test_single_query(inverted_index_class_done)
 
-    TestAndQueries(inverted_index_class_done)
+    test_and_queries(inverted_index_class_done)
 
-    TestOrQueries(inverted_index_class_done)
+    test_or_queries(inverted_index_class_done)
 
-    TestNotQueries(inverted_index_class_done)
+    test_not_queries(inverted_index_class_done)
 
-    TestMixQueries(inverted_index_class_done)
+    test_mix_queries(inverted_index_class_done)
 
     # Maybe can test for invalid queries
 
