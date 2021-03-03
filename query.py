@@ -139,7 +139,7 @@ class QueryAnd(Query):
                     merged = self.merge_two_lists(merged, each_list[0], merged_list_size, each_list[1])
                     merged_list_size = 0 # The merged list will have no skip pointers, hence 0 jumps
             else:
-                merged = [int(x.split(";")[0]) for x in sorted_evaluated_add_ops[0][0]]
+                merged = [int(str(x).split(";")[0]) for x in sorted_evaluated_add_ops[0][0]]
 
 
             # case 2, all add
