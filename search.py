@@ -35,7 +35,6 @@ def run_search(dict_file, postings_file, queries_file, results_file):
 
 
     ############################################
-    # Example code below to demonstrate how search.py may use InvertedIndex class to retrieve posting lists for term etc.....
 
     inverted_index_class = InvertedIndex(out_dict=dict_file, out_postings=postings_file)
 
@@ -47,6 +46,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
             for query in f:
                 query = query.strip()
                 if query == "":
+                    out.append("\n")
                     continue
                 n += 1
                 query = QueryParser.parse(query, use_sh)
