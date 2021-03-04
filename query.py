@@ -80,12 +80,11 @@ class QueryOr(Query):
         return ops
 
     def evaluate(self, inverted_index, forced=False):
-        ops = [set(op.evaluate(inverted_index, forced=True)) for op in self.ops]
+        ops = [op.evaluate(inverted_index, forced=True) for op in self.ops]
         union = ops[0]
         for op in ops[1:]:
-            union.update(op)
+            union = merge_or(union, op)
 
-        union = sorted(list(union))
         self.size = len(union)
 
         return union
@@ -95,6 +94,107 @@ class QueryOr(Query):
 
     def __str__(self):
         return "∨".join([op.__str__() for op in self.ops])
+
+
+def merge_two_lists(list1, list2, list1_size, list2_size):
+    """
+        Takes in 2 lists.
+        Each list contains items of the format : (curr_doc_id, next_doc_id) where next_doc_id is the next skip
+        The output is a single list of the same format
+    """
+    jump_1 = ceil(sqrt(list1_size))
+    jump_2 = ceil(sqrt(list2_size))
+
+    if list1_size == 0:
+        list1_size = len(list1)
+
+    merged_list = []
+    i = 0
+    j = 0
+
+    while i < list1_size and j < list2_size:
+        item_1 = list1[i]
+        item_2 = list2[j]
+        if item_1[0] == item_2[0]:
+            merged_list.append(item_1)
+            i += 1
+            j += 1
+        elif item_1[0] < item_2[0]:
+            # Has skip pointer
+            if item_1[1] != -1 and item_1[1] < item_2[0]:
+                i += jump_1
+            else:
+                i += 1
+        else:
+            # Has skip pointer
+            if item_2[1] != -1 and item_2[1] < item_1[0]:
+                j += jump_2
+            else:
+                j += 1
+
+    return merged_list
+
+
+def merge_or(l1, l2):
+    i = j = 0
+    len1 = len(l1)
+    len2 = len(l2)
+    out = []
+    if len1 == 0:
+        return l2
+    if len2 == 0:
+        return l1
+
+    while i < len1 and j < len2:
+        if l1[i] == l2[j]:
+            out.append(l1[i])
+            i += 1
+            j += 1
+        elif l1[i] > l2[j]:
+            out.append(l2[j])
+            j += 1
+        else:
+            out.append(l1[i])
+            i += 1
+
+        if i == len1:
+            out += l2[j:]
+            break
+        if j == len2:
+            out += l1[i:]
+            break
+    return out
+
+
+def difference(l1, l2):
+    i = j = 0
+    len1 = len(l1)
+    len2 = len(l2)
+    out = []
+
+    if len1 == 0:
+        return out
+    if len2 == 0:
+        return l1
+
+    while i < len1 and j < len2:
+        if l1[i] == l2[j]:
+            i += 1
+            j += 1
+        elif l1[i] > l2[j]:
+            j += 1
+        else:
+            out.append(l1[i])
+            i += 1
+
+        if i == len1:
+            return out
+
+        if j == len2:
+            out += l1[i:]
+            return out
+    return out
+
 
 class QueryAnd(Query):
     def __init__(self, ops):
@@ -116,98 +216,59 @@ class QueryAnd(Query):
 
     def evaluate(self, inverted_index, **kwargs):
 
-        add_ops = [] # Format of each list item:(curr, next)
+        add_lists = [] # Format of each list item:(curr, next)
         for op in self.ops:
             if not op.is_flipped:
                 if op.is_primitive:
                     #isinstance(op, QueryTerm)
-                    add_ops.append((op._evaluate(inverted_index), op.get_size(inverted_index)))
+                    add_lists.append((op._evaluate(inverted_index), op.get_size(inverted_index)))
                 else:
                     list_ops = [(x, -1) for x in op.evaluate(inverted_index)]
-                    add_ops.append((list_ops, op.get_size(inverted_index)))
+                    add_lists.append((list_ops, op.get_size(inverted_index)))
 
-        negate_ops = [set(op.evaluate(inverted_index)) for op in self.ops if op.is_flipped]
+        negate_lists = [op.evaluate(inverted_index) for op in self.ops if op.is_flipped]
 
         # case 1, all negate
-        if len(add_ops) == 0:
-            merged = negate_ops[0]
-            for op in negate_ops[1:]:
-                merged.update(op)
-            all_negate = list(sorted(inverted_index.all_files.difference(merged)))
+        if len(add_lists) == 0:
+            merged = negate_lists[0]
+            for op in negate_lists[1:]:
+                merged = merge_or(merged, op)
+            all_negate = list(sorted(difference(inverted_index.all_files, merged)))
             self.size = len(all_negate)
             return all_negate  # todo can still be improved
         else:
             # Sort by evaluated op size
-            add_ops = sorted(add_ops, key=lambda x: x[1])
+            add_lists = sorted(add_lists, key=lambda x: x[1])
 
-            if len(add_ops) > 1:
+            if len(add_lists) > 1:
                 # We have to merge more than 1 list
-                merged_ops = add_ops[0][0]
-                merged_list_size = add_ops[0][1]
-                for each_list in add_ops[1:]:
-                    merged_ops = self.merge_two_lists(merged_ops, each_list[0], merged_list_size, each_list[1])
+                merged_ops = add_lists[0][0]
+                merged_list_size = add_lists[0][1]
+                for each_list in add_lists[1:]:
+                    merged_ops = merge_two_lists(merged_ops, each_list[0], merged_list_size, each_list[1])
                     merged_list_size = 0 # The merged list will have no skip pointers, hence 0 jumps
                 merged = [x[0] for x in merged_ops]
             else:
                 # Case where we only have 1 list in add_ops
-                merged = [x[0] for x in add_ops[0][0]]
+                merged = [x[0] for x in add_lists[0][0]]
 
             # case 2, all add
-            if len(negate_ops) == 0:
+            if len(negate_lists) == 0:
                 self.size = len(merged)
                 return merged
 
             # case 3, some add, some negate
-            merged = set(merged)
-            for op in negate_ops:
-                merged = merged - op
-            diff = list(sorted(merged))
-            self.size = len(diff)
-            return diff
-
-    def merge_two_lists(self, list1, list2, list1_size, list2_size):
-        """
-            Takes in 2 lists.
-            Each list contains items of the format : (curr_doc_id, next_doc_id) where next_doc_id is the next skip
-            The output is a single list of the same format
-        """
-        jump_1 = ceil(sqrt(list1_size))
-        jump_2 = ceil(sqrt(list2_size))
-
-        if list1_size == 0:
-            list1_size = len(list1)
-
-        merged_list = []
-        i = 0
-        j = 0
-
-        while i < list1_size and j < list2_size:
-            item_1 = list1[i]
-            item_2 = list2[j]
-            if item_1[0] == item_2[0]:
-                merged_list.append(item_1)
-                i += 1
-                j += 1
-            elif item_1[0] < item_2[0]:
-                # Has skip pointer
-                if item_1[1] != -1 and item_1[1] < item_2[0]:
-                    i += jump_1
-                else:
-                    i += 1
-            else:
-                # Has skip pointer
-                if item_2[1] != -1 and item_2[1] < item_1[0]:
-                    j += jump_2
-                else:
-                    j += 1
-
-        return merged_list
+            for op in negate_lists:
+                merged = difference(merged, op)
+            self.size = len(merged)
+            return merged
 
     def get_size(self, inverted_index):
         return self.size
 
     def __str__(self):
         return "∧".join([op.__str__() for op in self.ops])
+
 
 class QueryNot(Query):
     def __init__(self, op: Query):
@@ -220,7 +281,7 @@ class QueryNot(Query):
     def evaluate(self, inverted_index: InvertedIndex, forced=False):
         matches = self.op.evaluate(inverted_index)
         if forced:
-            diff = list(inverted_index.all_files.difference(matches))
+            diff = difference(inverted_index.all_files, matches)
             self.size = len(diff)
             return diff
         else:

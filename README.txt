@@ -85,6 +85,11 @@ document ids for the query and save the query results into the output file.
     in the case where the root query is a NOT query, or when it is evaluated as part of an operand in an OR operator.
     - The NOT operator is evaluated using {all_doc_ids} - {matches}
 
+
+Misc:
+We initially used python set intersection, union, and difference operators for the merging, which was faster (~2x)
+compared to the iterative merge implemented in this submitted version, even with skip lists.
+
 == Files included with this submission ==
 
 List the files in your submission here and provide a short 1 line
@@ -95,7 +100,7 @@ and formatted correctly.
 (2) inverted_index.py: It contains the main logic of constructing the dictionary and posting lists. It contains methods to aid in processing search queries.
 (3) query.py: It takes in all the queries and calls the appropriate functions in query.py and write the final returned results.
 (4) search.py: It contains the main logic of parsing the input query and evaluating results.
-(5) essay.txt: It contains our answers to the essay questions.
+(5) ESSAY.txt: It contains our answers to the essay questions.
 (6) dictionary.txt: It contains the terms of the inverted index. Each line is in the format of [A B C]
     where A is the term value, B is the length of the posting_list for A and C is the offset value of the line containing the term in posting.txt file.
 (7) postings.txt: Each line is in the format of [A B] where A is the term value and B are the document ids associated with it separated by space.

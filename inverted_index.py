@@ -33,11 +33,11 @@ class InvertedIndex:
         self.in_dir = in_dir
         self.out_dict = out_dict
         self.out_postings = out_postings
-        self.all_files = set()
+        self.all_files = []
         try:
             with open("document_id_list.txt") as f:
                 for line in f.readlines():
-                    self.all_files.update([int(i) for i in line.split(",")])
+                    self.all_files += [int(i) for i in line.strip().split(",")]
         except FileNotFoundError:
             print("Doc id list not created")
 
